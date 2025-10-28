@@ -1,0 +1,22 @@
+server:
+  port: 3000
+  host: "0.0.0.0"
+  workers: 1
+
+llm:
+  base_url: "https://api.anthropic.com"
+  type: "anthropic"
+
+interceptors:
+  - type: live_trace
+    enabled: true
+    config:
+      server_port: 8080
+      auto_open_browser: true
+      max_events: 10000
+      retention_minutes: 30
+      refresh_interval: 2
+
+logging:
+  level: INFO
+  format: text

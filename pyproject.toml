@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-inspector"
+version = "0.1.0"
+description = "CLI launcher for Cylestio Perimeter with default OpenAI and Anthropic configs"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    {name = "Cylestio"}
+]
+requires-python = ">=3.9"
+dependencies = [
+    "typer[all]>=0.12.3",
+    "pyyaml>=6.0.1",
+    "cylestio-perimeter>=1.2.0",
+]
+
+[project.scripts]
+agent-inspector = "agent_inspector.cli:main"
