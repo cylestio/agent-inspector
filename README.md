@@ -1,8 +1,10 @@
 # Agent Inspector
 
-Debug, inspect, and evaluate AI agent behavior and risk in real-time.
+Debug, trace, and evaluate agent risk and behavior in real-time.
 
-Agent Inspector provides instant visibility into your AI agents with ready-to-run configurations for OpenAI and Anthropic. Launch a comprehensive monitoring dashboard with a single command.
+Agent Inspector gives you instant visibility into your AI agents with ready-to-run profiles for OpenAI and Anthropic. Start a local proxy and live tracing dashboard with a single command.
+
+Ideal for development-time evaluation and for running alongside your test suite (including CI).
 
 ## Installation
 
@@ -62,35 +64,35 @@ agent-inspector --help
 
 ### Configuration
 
-Agent Inspector comes with pre-configured profiles for OpenAI and Anthropic. Each profile includes:
-- Proxy server settings
-- Live trace interceptor with real-time analytics
-- Optimal logging configuration
+Agent Inspector comes with preconfigured profiles for OpenAI and Anthropic. Each profile includes:
+- Local proxy settings
+- Streaming trace interceptor for real-time analytics
+- Sensible logging defaults
 
 ## Features
 
-### Real-Time Monitoring
-- Auto-refreshing dashboards with agent and session views
-- Health badges and status indicators
-- Token usage and duration tracking
+### Live Tracing & Debugging
+- Streaming live trace of sessions, tool executions, and messages for instant debugging
+- Real-time token usage and duration tracking
 - Tool usage monitoring
+- Health badges and status indicators
 
 ### Risk Analytics
-Comprehensive analysis across four categories:
+Evaluate agent risk across four categories:
 - **Resource Management**: Token usage, session duration, and tool call patterns
-- **Environment & Supply Chain**: Model version tracking and tool adoption
+- **Environment & Supply Chain**: Model versions and tool adoption
 - **Behavioral Stability**: Consistency and predictability scoring
 - **Privacy & PII**: Automated detection of sensitive data exposure
 
-### PII Detection
-- Automatic scanning of user messages, prompts, and tool inputs
-- Confidence-level scoring for findings
+### PII Detection (Microsoft Presidio)
+- Scan prompts, messages, and tool inputs for sensitive data
+- Confidence scoring on each finding
 - Session-level and aggregate reporting
 
 ### Session Intelligence
-- Timeline replay of LLM calls and tool executions
+- Step-by-step timeline of model calls and tool executions
 - Behavioral pattern analysis and outlier detection
-- Detailed drill-downs for debugging and triage
+- Deep drill-downs for rapid debugging and triage
 
 ## Dependencies
 
