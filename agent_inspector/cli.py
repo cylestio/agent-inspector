@@ -11,20 +11,15 @@ import typer
 import yaml
 
 BANNER = r"""
-    ___                 _                _____                     _             
-   /   |  ____  _______(_)___  ____ _   / ___/____  ____ ___  ____(_)___  ____ _ 
-  / /| | / __ \/ ___/ / / __ \/ __ `/   \__ \/ __ \/ __ `__ \/ __/ / __ \/ __ `/ 
- / ___ |/ /_/ / /  / / / / / / /_/ /   ___/ / /_/ / / / / / / /_/ / / / / /_/ /  
-/_/  |_|\____/_/  /_/_/_/ /_/\__, /   /____/\____/_/ /_/ /_/\__/_/_/ /_/\__, /   
-                           /____/                                  /____/        
+    _                    _     ___                           _             
+   / \   __ _  ___ _ __ | |_  |_ _|_ __  ___ _ __   ___  ___| |_ ___  _ __ 
+  / _ \ / _` |/ _ \ '_ \| __|  | || '_ \/ __| '_ \ / _ \/ __| __/ _ \| '__|
+ / ___ \ (_| |  __/ | | | |_   | || | | \__ \ |_) |  __/ (__| || (_) | |   
+/_/   \_\__, |\___|_| |_|\__| |___|_| |_|___/ .__/ \___|\___|\__\___/|_|   
+        |___/                               |_|                            
 """
 
 CONFIG_DIR = Path(__file__).resolve().parent / "configs"
-
-CRITICAL_MESSAGES = [
-    "Behavior stability score is 0.57 with 42% outliers.",
-    "PII detection flagged 24 findings (16 high-confidence).",
-]
 
 
 class Provider(str, Enum):
@@ -66,15 +61,6 @@ def _show_configs() -> None:
         contents = config_path.read_text(encoding="utf-8")
         typer.echo(contents.rstrip())
         typer.echo("")
-
-
-def _print_known_issues() -> None:
-    if not CRITICAL_MESSAGES:
-        return
-    typer.secho("Known issues detected:", fg=typer.colors.RED, bold=True)
-    for message in CRITICAL_MESSAGES:
-        typer.secho(f"- {message}", fg=typer.colors.RED)
-    typer.echo("")
 
 
 def _launch_perimeter(config_path: Path) -> None:
@@ -149,7 +135,6 @@ def _entrypoint(
             raise typer.Exit(code=1)
 
     _print_banner()
-    _print_known_issues()
     typer.secho(f"Agent Inspector loading the {provider.value} perimeter profile...", fg=typer.colors.GREEN)
 
     temp_dir = Path(tempfile.mkdtemp(prefix="agent-inspector-"))
