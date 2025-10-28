@@ -21,76 +21,6 @@ BANNER = r"""
 
 CONFIG_DIR = Path(__file__).resolve().parent / "configs"
 
-STATUS_COLORS = {
-    "OK": typer.colors.GREEN,
-    "WARN": typer.colors.YELLOW,
-    "FAIL": typer.colors.RED,
-}
-
-REPORT_DATA = [
-    {
-        "title": "Resource Management",
-        "description": "Summarizes how the agent uses tokens, time, and tools against policy.",
-        "metrics": [
-            ("Avg. Tokens", "7K"),
-            ("Avg. Session Duration", "0.1 min"),
-        ],
-        "checks": [
-            ("Session Duration Consistency", "OK", "CV: 0.22"),
-            ("Tool Consistency Across Sessions", "OK", "CV: 0.46"),
-            ("Token Consistency Across Sessions", "OK", "CV: 0.23"),
-            ("Token Budget Usage", "OK", "8,433 max tokens"),
-            ("Tool Call Volume", "OK", "4 max calls"),
-        ],
-    },
-    {
-        "title": "Environment & Supply Chain",
-        "description": "Examines model version pinning and tool adoption health.",
-        "metrics": [
-            ("Model", "claude-3-haiku-20240307"),
-            ("Avg. Tools Coverage", "0.43"),
-            ("Avg. Tool Calls", "2.7"),
-            ("Tools", "divide ×8, add ×7, subtract ×4, multiply unused, power unused"),
-        ],
-        "checks": [
-            ("Pinned Model Usage", "OK", "1 pinned model"),
-            ("Session Tool Coverage", "WARN", "0.43 coverage"),
-            ("Unused Tools Inventory", "WARN", "2 unused tools"),
-        ],
-    },
-    {
-        "title": "Behavioral Stability",
-        "description": "Summarizes behavioral consistency, predictability, and remaining variance.",
-        "checks": [
-            ("Behavior Cluster Formation", "OK", "1 cluster"),
-            ("Behavior Stability Score", "FAIL", "0.57 score"),
-            ("Behavior Outlier Rate", "FAIL", "42% outliers"),
-            ("Behavior Predictability", "WARN", "0.57 score"),
-            ("Behavioral Uncertainty Level", "WARN", "0.43 uncertainty"),
-        ],
-    },
-    {
-        "title": "Privacy & PII Compliance",
-        "description": "Microsoft Presidio powered detection of PII exposure in agent streams.",
-        "checks": [
-            ("PII Detection", "FAIL", "24 findings (16 high-confidence)"),
-            ("PII in System Prompts", "OK", "No PII in system prompts"),
-            ("PII Exposure Rate", "WARN", "100% sessions with PII"),
-        ],
-    },
-    {
-        "title": "Behavioral Insights",
-        "description": "Behavioral pattern analysis using MinHash clustering and outlier detection.",
-        "metrics": [
-            ("Stability Score", "57%"),
-            ("Predictability Score", "57%"),
-            ("Summary", "Unstable agent with unpredictable behavior - single dominant pattern"),
-            ("Outlier Sessions", "3 (IDs: 435a71b8…, 7a4049e2…, 76597661…)"),
-            ("Cluster", "cluster_1 (4 sessions, 57.1%) featuring add/divide usage"),
-        ],
-    },
-]
-
 CRITICAL_MESSAGES = [
     "Behavior stability score is 0.57 with 42% outliers.",
     "PII detection flagged 24 findings (16 high-confidence).",
@@ -138,37 +68,13 @@ def _show_configs() -> None:
         typer.echo("")
 
 
-def _render_status(label: str, status: str, detail: str) -> str:
-    color = STATUS_COLORS.get(status.upper(), typer.colors.WHITE)
-    status_text = typer.style(status.upper(), fg=color, bold=True)
-    detail_text = f" ({detail})" if detail else ""
-    return f"- {label}: {status_text}{detail_text}"
-
-
-def _show_report() -> None:
-    typer.secho("Agent Inspector Report", fg=typer.colors.CYAN, bold=True)
-    typer.echo("")
-    for section in REPORT_DATA:
-        typer.secho(section["title"], fg=typer.colors.BRIGHT_BLUE, bold=True)
-        typer.echo(section["description"])
-        for metric in section.get("metrics", []):
-            typer.secho(f"  • {metric[0]}: {metric[1]}", fg=typer.colors.BRIGHT_BLACK)
-        for check in section.get("checks", []):
-            typer.echo(_render_status(check[0], check[1], check[2]))
-        typer.echo("")
-    typer.secho(
-        "Use the Live Trace dashboard for deeper drill-down into outliers and PII findings.",
-        fg=typer.colors.MAGENTA,
-    )
-
-
 def _print_known_issues() -> None:
     if not CRITICAL_MESSAGES:
         return
     typer.secho("Known issues detected:", fg=typer.colors.RED, bold=True)
     for message in CRITICAL_MESSAGES:
         typer.secho(f"- {message}", fg=typer.colors.RED)
-    typer.secho("Run with --show-report for full details.\n", fg=typer.colors.BRIGHT_BLACK)
+    typer.echo("")
 
 
 def _launch_perimeter(config_path: Path) -> None:
@@ -216,20 +122,11 @@ def _entrypoint(
         "--show-configs",
         help="Display the bundled configurations and exit.",
     ),
-    show_report: bool = typer.Option(
-        False,
-        "--show-report",
-        help="Display the latest behavior, resource, and PII report, then exit.",
-    ),
 ) -> None:
     """Agent Inspector by Cylestio lets you debug, inspect, and evaluate agent behaviour and risk."""
 
     if show_configs:
         _show_configs()
-        raise typer.Exit()
-
-    if show_report:
-        _show_report()
         raise typer.Exit()
 
     config = _load_config(provider)

@@ -56,9 +56,6 @@ agent-inspector openai --port 8000 --trace-port 9090
 # View bundled configurations
 agent-inspector --show-configs
 
-# View sample analytics report
-agent-inspector --show-report
-
 # Get help
 agent-inspector --help
 ```
@@ -103,4 +100,4 @@ Agent Inspector is built on:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details
+Apache License - see [LICENSE](LICENSE) for details
