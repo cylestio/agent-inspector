@@ -1,45 +1,106 @@
 # Agent Inspector
 
-Agent Inspector is a thin CLI wrapper around [cylestio-perimeter](https://pypi.org/project/cylestio-perimeter/) that ships with ready-to-run configurations for OpenAI and Anthropic providers. It is designed for installation via `pipx` or `uvx` and aims to make spinning up the perimeter server a single command away.
+Debug, inspect, and evaluate AI agent behavior and risk in real-time.
 
-## Usage
+Agent Inspector provides instant visibility into your AI agents with ready-to-run configurations for OpenAI and Anthropic. Launch a comprehensive monitoring dashboard with a single command.
+
+## Installation
+
+Install via `pipx` (recommended):
 
 ```bash
+pipx install agent-inspector
+```
+
+Or via `pip`:
+
+```bash
+pip install agent-inspector
+```
+
+Or run directly with `uvx`:
+
+```bash
+uvx agent-inspector
+```
+
+## Quick Start
+
+Launch Agent Inspector for your provider:
+
+```bash
+# For OpenAI
 agent-inspector openai
-# or
+
+# For Anthropic
 agent-inspector anthropic
 ```
 
-Use `--help` to view all available options including the server and live trace port overrides.
+This starts:
+- A proxy server on port 3000 (configurable)
+- A live trace dashboard on port 8080 (configurable)
 
-To inspect the bundled configurations without launching the server, run:
+Point your AI application to `http://localhost:3000` and start monitoring immediately.
+
+## Usage
+
+### Basic Commands
 
 ```bash
+# Launch with default settings
+agent-inspector openai
+
+# Override ports
+agent-inspector openai --port 8000 --trace-port 9090
+
+# View bundled configurations
 agent-inspector --show-configs
-```
 
-Review the latest live trace analytics without launching the server:
-
-```bash
+# View sample analytics report
 agent-inspector --show-report
+
+# Get help
+agent-inspector --help
 ```
 
-## Live Trace Test Coverage
+### Configuration
 
-The bundled configs enable the `live_trace` interceptor from `cylestio-perimeter`. Its test suite (`src/interceptors/live_trace/test_pii_analysis.py`) exercises the PII analysis pipeline end-to-end:
-- Validates how user messages, system prompts, and tool inputs are extracted from session events before inspection.
-- Confirms PII detection aggregates findings per session and per entity type using Presidio’s analyzer (mocked in tests).
-- Classifies findings into high, medium, and low confidence buckets and ensures summary counters stay accurate.
-- Tracks the most common entities encountered and correctly handles edge cases such as empty sessions or filtered results.
+Agent Inspector comes with pre-configured profiles for OpenAI and Anthropic. Each profile includes:
+- Proxy server settings
+- Live trace interceptor with real-time analytics
+- Optimal logging configuration
 
-These checks help ensure the live trace dashboard surfaces consistent, actionable signals when you run Agent Inspector’s OpenAI or Anthropic profiles.
+## Features
 
-## Live Trace Overview
+### Real-Time Monitoring
+- Auto-refreshing dashboards with agent and session views
+- Health badges and status indicators
+- Token usage and duration tracking
+- Tool usage monitoring
 
-For the full feature list see `live_trace.md`, but at a glance the Live Trace dashboard delivers:
-- **Real-time dashboards**: Auto-refreshing agent and session views with health badges, duration/token stats, and tool usage tracking.
-- **Risk analytics**: Four security categories (Resource Management, Environment & Supply Chain, Behavioral Stability, Privacy & PII) with pass/warn/fail status, evidence, and remediation tips.
-- **Behavior insights**: MinHash-based clustering, outlier detection, and stability/predictability scoring so you can spot drifting or risky sessions quickly.
-- **PII safeguards**: Microsoft Presidio–powered scanning that logs entity findings (with confidence levels) across user messages, prompts, and tool inputs.
-- **Session drill-downs**: Timeline replay of LLM calls, tool executions, errors, and metrics, plus cluster/outlier context for faster triage.
-- **Readiness checks**: Clear indicators when the minimum data thresholds (5 sessions for full risk analysis) have not yet been met.
+### Risk Analytics
+Comprehensive analysis across four categories:
+- **Resource Management**: Token usage, session duration, and tool call patterns
+- **Environment & Supply Chain**: Model version tracking and tool adoption
+- **Behavioral Stability**: Consistency and predictability scoring
+- **Privacy & PII**: Automated detection of sensitive data exposure
+
+### PII Detection
+- Automatic scanning of user messages, prompts, and tool inputs
+- Confidence-level scoring for findings
+- Session-level and aggregate reporting
+
+### Session Intelligence
+- Timeline replay of LLM calls and tool executions
+- Behavioral pattern analysis and outlier detection
+- Detailed drill-downs for debugging and triage
+
+## Dependencies
+
+Agent Inspector is built on:
+- [cylestio-perimeter](https://pypi.org/project/cylestio-perimeter/) - Agent monitoring infrastructure
+- [Microsoft Presidio](https://microsoft.github.io/presidio/) - PII detection and analysis
+
+## License
+
+Apache-2.0
