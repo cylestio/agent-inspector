@@ -56,9 +56,6 @@ agent-inspector openai --port 8000 --trace-port 9090
 
 # View bundled configs
 agent-inspector --show-configs
-
-# View sample report
-agent-inspector --show-report
 ```
 
 ### Code Quality
