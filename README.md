@@ -103,4 +103,4 @@ Agent Inspector is built on:
 
 ## License
 
-Apache-2.0
+MIT License - see [LICENSE](LICENSE) for details
