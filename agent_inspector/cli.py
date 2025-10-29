@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import shutil
+import subprocess
 import tempfile
 from enum import Enum
 from pathlib import Path
@@ -64,23 +65,36 @@ def _show_configs() -> None:
 
 
 def _launch_perimeter(config_path: Path) -> None:
+    """Launch cylestio-perimeter via subprocess to avoid typer.Option() issues."""
     try:
-        from src.main import run as perimeter_run
-    except ImportError as exc:  # pragma: no cover - fallback if import fails
+        subprocess.run(
+            ["cylestio-perimeter", "run", "--config", str(config_path)],
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
         typer.secho(
-            "Unable to import cylestio-perimeter. Ensure it is installed and available.",
+            f"Perimeter exited with error code {exc.returncode}",
+            err=True,
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(code=exc.returncode) from exc
+    except FileNotFoundError as exc:
+        typer.secho(
+            "Unable to launch cylestio-perimeter. Ensure it is installed and available.",
             err=True,
             fg=typer.colors.RED,
         )
         raise typer.Exit(code=1) from exc
-
-    perimeter_run(config=str(config_path))
 
 
 def _cleanup_temp_dir(path: Path) -> None:
     shutil.rmtree(path, ignore_errors=True)
 
 
+app = typer.Typer()
+
+
+@app.command()
 def _entrypoint(
     provider: Provider = typer.Argument(
         Provider.OPENAI,
@@ -153,7 +167,7 @@ def _entrypoint(
 
 def main() -> None:
     """Entry point used by the console script."""
-    typer.run(_entrypoint)
+    app()
 
 
 if __name__ == "__main__":
