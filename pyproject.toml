@@ -1,10 +1,13 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [project]
 name = "agent-inspector"
-version = "0.1.0"
+dynamic = ["version"]
 description = "CLI launcher for Cylestio Perimeter with default OpenAI and Anthropic configs"
 readme = "README.md"
 license = "MIT"
