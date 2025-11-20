@@ -117,6 +117,11 @@ def _entrypoint(
         max=65535,
         help="Override the Live Trace web server port (defaults to 8080).",
     ),
+    use_local_storage: Optional[str] = typer.Option(
+        None,
+        "--use-local-storage",
+        help="Enable local SQLite storage for live trace. Optionally specify custom db path (default: ./agent-inspector-trace.db).",
+    ),
     show_configs: bool = typer.Option(
         False,
         "--show-configs",
@@ -143,6 +148,22 @@ def _entrypoint(
         else:
             typer.secho(
                 "Live Trace interceptor not found in config; cannot override trace port.",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(code=1)
+
+    if use_local_storage is not None:
+        db_path = use_local_storage if use_local_storage else "./agent-inspector-trace.db"
+        interceptors = config.setdefault("interceptors", [])
+        for interceptor in interceptors:
+            if interceptor.get("type") == "live_trace":
+                interceptor.setdefault("config", {})["storage_mode"] = "sqlite"
+                interceptor["config"]["db_path"] = db_path
+                break
+        else:
+            typer.secho(
+                "Live Trace interceptor not found in config; cannot set local storage.",
                 fg=typer.colors.RED,
                 err=True,
             )
