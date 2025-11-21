@@ -124,7 +124,7 @@ def _entrypoint(
     ),
     storage_db_path: Optional[str] = typer.Option(
         None,
-        "--db-path",
+        "--local-storage-path",
         help="Custom database path for local storage (requires --use-local-storage).",
     ),
     show_configs: bool = typer.Option(
