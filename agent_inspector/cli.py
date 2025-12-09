@@ -108,14 +108,14 @@ def _entrypoint(
         "-p",
         min=1,
         max=65535,
-        help="Override the perimeter server listening port (defaults to 3000).",
+        help="Override the perimeter server listening port (defaults to 4000).",
     ),
     live_trace_port: Optional[int] = typer.Option(
         None,
         "--trace-port",
         min=1,
         max=65535,
-        help="Override the Live Trace web server port (defaults to 8080).",
+        help="Override the Live Trace web server port (defaults to 7100).",
     ),
     use_local_storage: bool = typer.Option(
         False,

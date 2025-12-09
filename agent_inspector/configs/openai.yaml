@@ -1,5 +1,5 @@
 server:
-  port: 3000
+  port: 4000
   host: "0.0.0.0"
   workers: 1
 
@@ -11,7 +11,7 @@ interceptors:
   - type: live_trace
     enabled: true
     config:
-      server_port: 8080
+      server_port: 7100
       auto_open_browser: true
       max_events: 10000
       retention_minutes: 30
