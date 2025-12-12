@@ -12,9 +12,9 @@ Agent Inspector is a thin CLI wrapper around cylestio-perimeter that provides re
 
 - **CLI Entry Point** (`agent_inspector/cli.py`): Main Typer-based CLI that handles command parsing, configuration loading, and server launch orchestration
 - **Provider Configurations** (`agent_inspector/configs/`): YAML configs for OpenAI and Anthropic providers, each specifying:
-  - Server settings (port 3000, host 0.0.0.0, workers)
+  - Server settings (port 4000, host 127.0.0.1, workers)
   - LLM provider base URLs and types
-  - Live trace interceptor configuration (port 8080, retention, refresh intervals)
+  - Live trace interceptor configuration (port 7100, retention, refresh intervals)
   - Logging configuration
 
 ### CLI Workflow
@@ -71,8 +71,8 @@ The bundled configs enable the `live_trace` interceptor which provides:
 - Session drill-downs with timeline replay
 
 Default ports:
-- Perimeter server: 3000
-- Live trace dashboard: 8080
+- Perimeter server: 4000
+- Live trace dashboard: 7100
 
 ## Dependencies
 

@@ -39,10 +39,10 @@ agent-inspector anthropic
 ```
 
 This starts:
-- A proxy server on port 3000 (configurable)
-- A live trace dashboard on port 8080 (configurable)
+- A proxy server on port 4000 (configurable)
+- A live trace dashboard on port 7100 (configurable)
 
-Point your AI application to `http://localhost:3000` and start monitoring immediately.
+Point your AI application to `http://localhost:4000` and start monitoring immediately.
 
 ## Usage
 
