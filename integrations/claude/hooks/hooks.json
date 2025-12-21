@@ -1,8 +1,14 @@
 {
-  "hooks": [
-    {
-      "event": "SessionStart",
-      "script": "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-running.sh"
-    }
-  ]
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-running.sh"
+          }
+        ]
+      }
+    ]
+  }
 }
