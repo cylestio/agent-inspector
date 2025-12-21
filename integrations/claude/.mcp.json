@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "agent-inspector": {
+      "type": "http",
+      "url": "http://localhost:7100/mcp"
+    }
+  }
+}

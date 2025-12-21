@@ -1,0 +1,13 @@
+{
+  "name": "agent-inspector",
+  "version": "1.0.0",
+  "description": "AI Agent Security Analysis - scan, fix, analyze, and report on AI agent vulnerabilities using OWASP LLM Top 10",
+  "author": {
+    "name": "Cylestio",
+    "url": "https://github.com/cylestio"
+  },
+  "homepage": "https://github.com/cylestio/agent-inspector",
+  "repository": "https://github.com/cylestio/agent-inspector",
+  "license": "MIT",
+  "keywords": ["security", "ai-agent", "owasp", "llm", "vulnerability", "sast", "dast"]
+}
