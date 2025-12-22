@@ -165,7 +165,7 @@ mkdir -p {AGENT_PROJECT_FOLDER}/.cursor/rules
 ```
 
 **Copy from package template** if available:
-- Look for: `src/templates/cursor-rules/agent-inspector.mdc` in the installed package or repo
+- Look for: `integrations/cursor/cursor-rules/agent-inspector.mdc` in the installed package or repo
 - Copy to: `{AGENT_PROJECT_FOLDER}/.cursor/rules/agent-inspector.mdc`
 
 If template not found, create the rules file with this minimal content:
@@ -234,7 +234,7 @@ ls {AGENT_PROJECT_FOLDER}/CLAUDE.md 2>/dev/null && echo "EXISTS" || echo "NOT_FO
 ```
 
 **Copy from package template** if available:
-- Look for: `src/templates/claude-code/CLAUDE.md` in the installed package or repo
+- Look for: `integrations/claude-code/CLAUDE.md` in the installed package or repo (if available)
 - Copy to: `{AGENT_PROJECT_FOLDER}/CLAUDE.md`
 
 **If NOT_FOUND and no template**, create `{AGENT_PROJECT_FOLDER}/CLAUDE.md` with:
@@ -259,13 +259,13 @@ mkdir -p {AGENT_PROJECT_FOLDER}/.cursor/commands
 
 **Copy slash command files from package template:**
 
-Look for: `src/templates/cursor-commands/` in the installed package or repo
+Look for: `integrations/cursor/cursor-commands/` in the installed package or repo
 
 Copy ALL `.md` files to: `{AGENT_PROJECT_FOLDER}/.cursor/commands/`
 
 ```bash
 # If in local dev mode (inside cylestio-perimeter repo):
-cp {REPO_ROOT}/src/templates/cursor-commands/*.md {AGENT_PROJECT_FOLDER}/.cursor/commands/
+cp {REPO_ROOT}/integrations/cursor/cursor-commands/*.md {AGENT_PROJECT_FOLDER}/.cursor/commands/
 
 # Commands to copy:
 # - agent-scan.md       → /agent-scan
@@ -292,7 +292,7 @@ ls {AGENT_PROJECT_FOLDER}/.cursor/commands/
 
 ### 5.4 Detailed Skills (Both IDEs)
 
-For more comprehensive skill files, check `src/templates/skills/`:
+For more comprehensive skill files, check `integrations/skills/` (if available):
 - `static-analysis/SKILL.md` - Complete `/agent-scan` workflow
 - `auto-fix/SKILL.md` - Complete `/agent-fix` workflow with prioritization
 - `dynamic-analysis/SKILL.md` - Runtime tracing setup
@@ -844,7 +844,7 @@ The rules file ensures I'll use these tools when you ask about security - even i
   - [ ] Cursor: `.cursor/rules/agent-inspector.mdc`
   - [ ] Claude Code: `CLAUDE.md` with Agent Inspector section
 - [ ] **Cursor ONLY:** Installed slash commands in `.cursor/commands/`
-  - [ ] Copied all `.md` files from `src/templates/cursor-commands/`
+  - [ ] Copied all `.md` files from `integrations/cursor/cursor-commands/`
   - [ ] Verified: agent-scan.md, agent-fix.md, agent-analyze.md, agent-correlate.md, agent-gate.md, agent-report.md, agent-status.md
 - [ ] Updated agent code with `base_url`
 - [ ] Started server OR told user how to start it
