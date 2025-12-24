@@ -1,6 +1,6 @@
 ---
 name: agent-inspector-status
-description: Check dynamic analysis status and session availability. Use when user says /status or asks about analysis availability, session counts, or when dynamic analysis was last run.
+description: Check dynamic analysis status and session availability for AI agent security testing. Report session counts, analysis history, and readiness. Use when user asks about status, session availability, analysis readiness, or when dynamic analysis was last run.
 ---
 
 # Dynamic Analysis Status
@@ -26,7 +26,7 @@ Sessions Available: 25 total
 Last Analysis: 2 hours ago
 Next Available: Ready (5 new sessions)
 
-To run analysis: /analyze
+To run analysis: /agent-inspector:analyze
 ```
 
 ## Status Fields
@@ -52,7 +52,7 @@ Sessions Available: 25 total
 Last Analysis: 2 hours ago
 Next Available: Ready (5 new sessions)
 
-To run analysis: /analyze
+To run analysis: /agent-inspector:analyze
 ```
 
 **No New Sessions:**
@@ -91,6 +91,6 @@ Then run your agent through test scenarios.
 ## After Status Check
 
 Based on status, suggest next actions:
-- **Pending > 0**: Run `/analyze`
+- **Pending > 0**: Run `/agent-inspector:analyze`
 - **Pending = 0**: Run more test scenarios
 - **No sessions**: Configure agent base_url

@@ -1,6 +1,6 @@
 ---
 name: agent-inspector-report
-description: Generate security compliance reports. Use when user says /report, asks for security report, CISO report, compliance documentation, executive summary, or customer due diligence.
+description: Generate security compliance reports for AI agents including OWASP LLM Top 10 coverage and SOC2 mapping. Support security_assessment, executive_summary, and customer_dd report types. Use when user asks for security report, CISO report, compliance documentation, executive summary, or customer due diligence.
 ---
 
 # Security Compliance Reports
@@ -11,9 +11,9 @@ Generate comprehensive security assessment reports in markdown format, delivered
 
 | Type | Command | Description |
 |------|---------|-------------|
-| **security_assessment** | `/report` | Full CISO report with OWASP, SOC2, code evidences |
-| **executive_summary** | `/report executive` | High-level GO/NO-GO for leadership |
-| **customer_dd** | `/report customer` | Due diligence report for customers/partners |
+| **security_assessment** | `/agent-inspector:report` | Full CISO report with OWASP, SOC2, code evidences |
+| **executive_summary** | `/agent-inspector:report executive` | High-level GO/NO-GO for leadership |
+| **customer_dd** | `/agent-inspector:report customer` | Due diligence report for customers/partners |
 
 ## Report Workflow
 
@@ -101,7 +101,7 @@ The report should be returned directly in the chat response.
 ## Example: Full Report
 
 ```
-User: /report
+User: /agent-inspector:report
 
 AI: Here's your security assessment report:
 
@@ -152,7 +152,7 @@ To view this in the dashboard: http://localhost:7100/agent-workflow/next-rooms/r
 ## Example: Executive Summary
 
 ```
-User: /report executive
+User: /agent-inspector:report executive
 
 AI: Here's your executive summary:
 

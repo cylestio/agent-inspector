@@ -1,6 +1,6 @@
 ---
 name: agent-inspector-correlate
-description: Correlate static findings with runtime data. Use when user says /correlate, asks to cross-reference static and dynamic findings, or wants to prioritize issues based on runtime evidence.
+description: Cross-reference static code findings with dynamic runtime observations. Identify VALIDATED (confirmed at runtime) vs UNEXERCISED (never triggered) issues. Use when user asks to correlate, cross-reference static and dynamic findings, or prioritize issues based on runtime evidence.
 ---
 
 # Correlate Static + Dynamic Findings
@@ -25,7 +25,7 @@ get_agent_workflow_state(agent_workflow_id)
 
 Verify both static AND dynamic data exist:
 - If `STATIC_ONLY`: Inform user to run dynamic tests first
-- If `DYNAMIC_ONLY`: Run /scan first
+- If `DYNAMIC_ONLY`: Run /agent-inspector:scan first
 - If `COMPLETE`: Proceed with correlation
 
 ### 2. Get Static Findings
@@ -84,7 +84,7 @@ UNEXERCISED (3) - Static risks, never triggered:
 
 Prioritize fixing VALIDATED issues first - they're actively exploitable.
 
-To fix the most critical: /fix REC-001
+To fix the most critical: /agent-inspector:fix REC-001
 
 View correlation in UI: http://localhost:7100/agent-workflow/{id}/static-analysis
 ```
@@ -128,6 +128,6 @@ Evidence: "File loaded but value safely overridden by env var"
 ## After Correlation
 
 Suggest next actions based on results:
-- VALIDATED issues -> `/fix REC-XXX`
+- VALIDATED issues -> `/agent-inspector:fix REC-XXX`
 - UNEXERCISED code -> Add test coverage
-- Check gate status -> `/gate`
+- Check gate status -> `/agent-inspector:gate`

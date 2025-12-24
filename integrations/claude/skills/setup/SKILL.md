@@ -1,6 +1,6 @@
 ---
 name: agent-inspector-setup
-description: Install and configure Agent Inspector for AI agent security analysis. Use when user asks to install, setup, or configure agent-inspector, or when starting a new security analysis project.
+description: Install and configure Agent Inspector for AI agent security analysis. Set up MCP tools, IDE connection, and proxy configuration. Use when user asks to install, setup, configure agent-inspector, or when starting a new security analysis project.
 ---
 
 # Agent Inspector Setup
@@ -17,15 +17,15 @@ This skill helps you install and configure Agent Inspector for AI agent security
 
 | Command | Description |
 |---------|-------------|
-| `/scan` | Run static security scan on current workspace |
-| `/scan path/` | Scan specific folder |
-| `/analyze` | Run dynamic runtime analysis |
-| `/correlate` | Cross-reference static + dynamic findings |
-| `/fix REC-XXX` | Fix a specific recommendation |
-| `/fix` | Fix highest priority blocking issue |
-| `/status` | Check dynamic analysis availability |
-| `/gate` | Check production gate status |
-| `/report` | Generate full security report |
+| `/agent-inspector:scan` | Run static security scan on current workspace |
+| `/agent-inspector:scan path/` | Scan specific folder |
+| `/agent-inspector:analyze` | Run dynamic runtime analysis |
+| `/agent-inspector:correlate` | Cross-reference static + dynamic findings |
+| `/agent-inspector:fix REC-XXX` | Fix a specific recommendation |
+| `/agent-inspector:fix` | Fix highest priority blocking issue |
+| `/agent-inspector:status` | Check dynamic analysis availability |
+| `/agent-inspector:gate` | Check production gate status |
+| `/agent-inspector:report` | Generate full security report |
 
 ## MCP Tools Available (17 total)
 
