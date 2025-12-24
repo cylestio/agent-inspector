@@ -28,7 +28,13 @@ jobs:
           pip install build
       
       - name: Build package
-        run: python -m build
+        env:
+          # Force setuptools-scm to use the tag version (strips 'v' prefix)
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.ref_name }}
+        run: |
+          VERSION=${SETUPTOOLS_SCM_PRETEND_VERSION#v}
+          echo "Building version: $VERSION"
+          SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION python -m build
       
       - name: Upload distributions
         uses: actions/upload-artifact@v4
