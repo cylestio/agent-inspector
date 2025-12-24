@@ -7,6 +7,18 @@ description: Run comprehensive static security analysis on AI agent code using O
 
 Run a comprehensive security scan on AI agent code using the OWASP LLM Top 10 framework.
 
+## Prerequisites
+
+**You MUST run the `agent-inspector-setup` skill (Preflight Check section) BEFORE proceeding.**
+
+This is NOT optional. The setup skill's Preflight Check will:
+1. Check if agent-inspector is already running
+2. Auto-detect your LLM provider (OpenAI/Anthropic)
+3. Start the server in background if needed
+4. Verify MCP connection is working
+
+**DO NOT skip this step.** If you proceed without running the Preflight Check, MCP tools will fail.
+
 ## Your Advantage Over Traditional SAST
 
 You are smarter than any static analysis tool. You can:

@@ -1,11 +1,11 @@
 ---
 name: agent-inspector-setup
-description: Install and configure Agent Inspector for AI agent security analysis. Set up MCP tools, IDE connection, and proxy configuration. Use when user asks to install, setup, configure agent-inspector, or when starting a new security analysis project.
+description: Install, configure, and ensure Agent Inspector is running for AI agent security analysis. Handles installation, server startup, provider detection, MCP tools, and IDE connection. Use when user asks to install, setup, configure agent-inspector, ensure it's running, or when starting a new security analysis project.
 ---
 
 # Agent Inspector Setup
 
-This skill helps you install and configure Agent Inspector for AI agent security analysis.
+This skill helps you install, configure, and ensure Agent Inspector is running for AI agent security analysis.
 
 ## Quick Start
 
@@ -13,10 +13,146 @@ This skill helps you install and configure Agent Inspector for AI agent security
 2. **Start**: `agent-inspector anthropic` (or `agent-inspector openai`)
 3. **Verify**: Dashboard at http://localhost:7100
 
+## Preflight Check
+
+Use this section to ensure Agent Inspector is running before any security analysis.
+
+### IMPORTANT: Commands That Will Hang
+
+**NEVER run these commands** - they will freeze your session:
+```bash
+# NEVER - will hang indefinitely
+curl http://localhost:...
+wget http://...
+nc -z localhost ...
+ping ...
+```
+
+Instead, use the MCP tool calls to verify connectivity.
+
+### Step 1: Check if Already Running
+
+Try calling any MCP tool:
+```
+get_security_patterns()
+```
+
+**If successful** → Agent Inspector is running. Done - proceed with your task.
+
+**If fails** (connection refused, timeout, tool not found) → Continue to Step 2.
+
+### Step 2: Check Installation
+
+Run:
+```bash
+which agent-inspector || pip show agent-inspector
+```
+
+**If not installed:**
+```bash
+pip install agent-inspector
+```
+
+### Step 3: Detect Provider
+
+Scan the codebase to determine which LLM provider the agent uses:
+
+```bash
+grep -r "from anthropic" . --include="*.py" | head -1
+grep -r "from openai" . --include="*.py" | head -1
+grep -r "import anthropic" . --include="*.py" | head -1
+grep -r "import openai" . --include="*.py" | head -1
+```
+
+**Decision logic:**
+- If `anthropic` found → use `anthropic` provider
+- If `openai` found → use `openai` provider
+- If both found → prefer `anthropic` (more common in agent frameworks)
+- If neither found → ask user which provider their agent uses
+
+**Provider options:**
+| Provider | Command | Use when |
+|----------|---------|----------|
+| `anthropic` | `agent-inspector anthropic` | Agent uses Anthropic/Claude API |
+| `openai` | `agent-inspector openai` | Agent uses OpenAI API |
+
+### Step 4: Start in Background
+
+Start agent-inspector with detected provider:
+
+```bash
+nohup agent-inspector {provider} > /tmp/agent-inspector.log 2>&1 &
+```
+
+Tell user:
+```
+Starting Agent Inspector ({provider} provider) in background...
+Log file: /tmp/agent-inspector.log
+```
+
+### Step 5: Wait for Startup
+
+Wait up to 15 seconds for server to be ready:
+
+```bash
+for i in {1..15}; do
+  if curl -s http://localhost:7100/health > /dev/null 2>&1; then
+    echo "ready"
+    break
+  fi
+  sleep 1
+done
+```
+
+**If ready, display success banner:**
+```
+ ██████╗██╗   ██╗██╗     ███████╗███████╗████████╗██╗ ██████╗
+██╔════╝╚██╗ ██╔╝██║     ██╔════╝██╔════╝╚══██╔══╝██║██╔═══██╗
+██║      ╚████╔╝ ██║     █████╗  ███████╗   ██║   ██║██║   ██║
+██║       ╚██╔╝  ██║     ██╔══╝  ╚════██║   ██║   ██║██║   ██║
+╚██████╗   ██║   ███████╗███████╗███████║   ██║   ██║╚██████╔╝
+ ╚═════╝   ╚═╝   ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚═╝ ╚═════╝
+                    AGENT INSPECTOR
+
+Agent Inspector is running!
+
+  Dashboard: http://localhost:7100
+  MCP Server: http://localhost:7100/mcp
+  Proxy: http://localhost:4000
+
+Ready for security analysis.
+```
+
+**If timeout:**
+```
+Agent Inspector failed to start within 15 seconds.
+Check log: /tmp/agent-inspector.log
+
+To start manually:
+  agent-inspector {provider}
+```
+
+### Step 6: Verify MCP Connection
+
+After startup, verify MCP works:
+```
+get_security_patterns()
+```
+
+If this succeeds, preflight is complete. Proceed with your task.
+
+## Ports Reference
+
+| Service | Port | URL |
+|---------|------|-----|
+| Dashboard/MCP | 7100 | http://localhost:7100 |
+| LLM Proxy | 4000 | http://localhost:4000 |
+
 ## Available Commands
 
 | Command | Description |
 |---------|-------------|
+| `/agent-inspector:setup` | Install and configure Agent Inspector |
 | `/agent-inspector:scan` | Run static security scan on current workspace |
 | `/agent-inspector:scan path/` | Scan specific folder |
 | `/agent-inspector:analyze` | Run dynamic runtime analysis |
@@ -84,6 +220,21 @@ Send ONE heartbeat at the start of work:
 ide_heartbeat(connection_id="{id}", is_developing=true)
 ```
 
+### Model Name Mapping
+
+Use your actual model identifier:
+
+| AI Model | Model Value |
+|----------|-------------|
+| Claude Opus 4.5 | `claude-opus-4-5-20251101` |
+| Claude Sonnet 4 | `claude-sonnet-4-20250514` |
+| Claude Sonnet 3.5 | `claude-3-5-sonnet-20241022` |
+| GPT-4o | `gpt-4o` |
+| GPT-4 Turbo | `gpt-4-turbo` |
+| Other models | Use your actual model identifier |
+
+Check your system prompt for the exact model ID (e.g., "You are powered by claude-opus-4-5-20251101").
+
 ## Derive agent_workflow_id
 
 Auto-derive from (priority order):
@@ -136,3 +287,91 @@ PENDING -> FIXING -> FIXED -> VERIFIED
 | Dynamic Analysis | http://localhost:7100/agent-workflow/{id}/dynamic-analysis |
 | Recommendations | http://localhost:7100/agent-workflow/{id}/recommendations |
 | Reports | http://localhost:7100/agent-workflow/{id}/reports |
+| Sessions | http://localhost:7100/agent-workflow/{id}/sessions |
+
+## Dynamic Analysis - 4 Check Categories
+
+| # | Category | Focus |
+|---|----------|-------|
+| 1 | Resource Management | Token/tool bounds, variance, cost |
+| 2 | Environment | Model pinning, tool coverage |
+| 3 | Behavioral | Stability, predictability, outliers |
+| 4 | Data | PII detection at runtime |
+
+## Correlation States
+
+| State | Meaning | Priority |
+|-------|---------|----------|
+| VALIDATED | Static issue confirmed at runtime | Highest - FIX FIRST! |
+| UNEXERCISED | Code path never executed | Test gap |
+| THEORETICAL | Static issue, safe at runtime | Lower priority |
+| RUNTIME_ONLY | Found only during runtime | Different fix approach |
+
+## Gate Status
+
+- **BLOCKED**: CRITICAL or HIGH issues remain open → can't ship
+- **OPEN**: All blocking issues resolved → ready for production
+
+## Setup Checklist
+
+When setting up Agent Inspector for a new project:
+
+- [ ] Ran `pip install agent-inspector`
+- [ ] Started server: `agent-inspector anthropic` or `agent-inspector openai`
+- [ ] Verified dashboard at http://localhost:7100
+- [ ] Registered IDE connection
+- [ ] (For dynamic analysis) Updated agent code with `base_url` pointing to proxy
+- [ ] Ran first security scan
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Command not found | Re-run: `pip install agent-inspector` |
+| Module not found | Reinstall: `pip install --force-reinstall agent-inspector` |
+| MCP tools unavailable | Reload Claude Code, verify server running |
+| Connection refused | Server not running - restart with `agent-inspector {provider}` |
+| Port 7100 in use | Kill existing process: `lsof -ti:7100 \| xargs kill` |
+| Port 4000 in use | Kill existing process: `lsof -ti:4000 \| xargs kill` |
+| Permission denied | Check pip/python environment is activated |
+
+## Common Error Messages
+
+**If installation fails:**
+```
+ERROR: Failed to install agent-inspector.
+
+Please run manually:
+  pip install agent-inspector
+
+If permission issues, try:
+  pip install --user agent-inspector
+```
+
+**If server won't start:**
+```
+ERROR: Agent Inspector failed to start.
+
+Check the log file:
+  cat /tmp/agent-inspector.log
+
+Common issues:
+1. Port already in use - kill existing process
+2. Missing dependencies - reinstall package
+3. Python version - requires Python 3.9+
+
+To start manually in a terminal:
+  agent-inspector {provider}
+```
+
+**If MCP connection fails after startup:**
+```
+ERROR: Server started but MCP connection failed.
+
+The server is running but MCP tools are not available.
+
+Try:
+1. Wait a few more seconds for full initialization
+2. Reload Claude Code: /mcp to verify connection
+3. Check server logs: cat /tmp/agent-inspector.log
+```
