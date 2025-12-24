@@ -81,3 +81,16 @@ Default ports:
 - `cylestio-perimeter>=1.2.0`: The actual perimeter server implementation
 
 The CLI is a thin launcher; the heavy lifting happens in cylestio-perimeter.
+
+## Version Management
+
+When creating a PR, **always update the version numbers** in the plugin configuration files:
+
+1. `.claude-plugin/marketplace.json` - update top-level `version`
+2. `.claude-plugin/marketplace.json` - update `plugins[0].version`
+3. `integrations/claude/.claude-plugin/plugin.json` - update `version`
+
+All three version fields must be kept in sync. Use semantic versioning (MAJOR.MINOR.PATCH):
+- PATCH: Bug fixes, minor tweaks
+- MINOR: New features, backward-compatible changes
+- MAJOR: Breaking changes
