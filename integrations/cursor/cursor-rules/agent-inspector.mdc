@@ -1,0 +1,899 @@
+---
+description: Agent Inspector - AI Agent Security Analysis (scan, correlate static ↔ dynamic)
+globs: ["**/*.py", "**/*.ts", "**/*.js"]
+---
+
+# Agent Inspector Integration
+
+**MCP Server:** `http://localhost:7100/mcp`
+**Dashboard:** `http://localhost:7100`
+**Proxy:** `http://localhost:4000`
+
+## Slash Commands (Type `/agent-` in chat)
+
+Slash commands are installed in `.cursor/commands/`. They invoke Agent Inspector MCP tools:
+
+| Command | Description |
+|---------|-------------|
+| `/agent-scan` | Run static security scan |
+| `/agent-fix` | Fix highest priority issue (or `/agent-fix REC-XXX` for specific) |
+| `/agent-analyze` | Run dynamic runtime analysis |
+| `/agent-correlate` | Cross-reference static + dynamic findings |
+| `/agent-gate` | Check production gate status |
+| `/agent-report` | Generate compliance report |
+| `/agent-status` | Check dynamic analysis status |
+
+## Available MCP Tools (17 total)
+
+### Analysis Tools
+| Tool | Description |
+|------|-------------|
+| `get_security_patterns` | Get OWASP LLM Top 10 patterns for analysis |
+| `create_analysis_session` | Start session for agent workflow (requires agent_workflow_id) |
+| `store_finding` | Record a security finding |
+| `complete_analysis_session` | Finalize session and calculate risk score |
+| `get_findings` | Retrieve stored findings |
+| `update_finding_status` | Mark finding as FIXED or IGNORED |
+
+### Knowledge Tools
+| Tool | Description |
+|------|-------------|
+| `get_owasp_control` | Get specific OWASP control details (LLM01-LLM10) |
+| `get_fix_template` | Get remediation template for a finding type |
+
+### Agent Workflow Lifecycle Tools
+| Tool | Description |
+|------|-------------|
+| `get_agent_workflow_state` | Check what analysis exists (static/dynamic/both) |
+| `get_tool_usage_summary` | Get tool usage patterns from dynamic sessions |
+| `get_agent_workflow_correlation` | Correlate static findings with dynamic runtime |
+
+### Agent Discovery Tools
+| Tool | Description |
+|------|-------------|
+| `get_agents` | List agents (filter by agent_workflow_id or "unlinked") |
+| `update_agent_info` | Link agents to agent workflows, set display names |
+
+### IDE Connection Tools
+| Tool | Description |
+|------|-------------|
+| `register_ide_connection` | Register your IDE (Cursor or Claude Code) as connected |
+| `ide_heartbeat` | Keep connection alive, signal active development |
+| `disconnect_ide` | Disconnect IDE from Agent Inspector |
+| `get_ide_connection_status` | Check current IDE connection status |
+
+## IDE CONNECTION (REQUIRED FIRST STEP)
+
+### Step 1: Know Your Model
+**You MUST identify what AI model you are.** Common values:
+- `claude-opus-4.5`, `claude-sonnet-4`, `claude-sonnet-3.5`
+- `gpt-4o`, `gpt-4-turbo`
+- Check your system prompt for "powered by X"
+
+### Step 2: Register with ALL Parameters
+```
+register_ide_connection(
+  ide_type="cursor",                      // "cursor" or "claude-code"
+  agent_workflow_id="{agent_workflow_id}",    // from folder name
+  workspace_path="{full_path}",           // workspace path
+  model="{your_model_name}"               // e.g., "claude-opus-4.5"
+)
+```
+
+### Step 3: Save connection_id
+**SAVE the `connection_id` from the response!** You need it for heartbeats.
+
+### Step 4: ONE Heartbeat (Save Tokens!)
+Send **ONE** heartbeat at the start of work, NOT after every action:
+```
+ide_heartbeat(connection_id="{id}", is_developing=true)
+```
+
+⚠️ **Don't spam heartbeats** - one per task is enough!
+
+**Dashboard indicators:**
+- 🟢 **Green**: IDE connected (lasts 60s after heartbeat)
+- 🟢✨ **Pulsing green**: Actively developing
+
+## AUTOMATIC WORKFLOW
+
+**When user asks for security analysis, follow this flow automatically:**
+
+### Step 1: Derive agent_workflow_id
+Auto-derive from (priority order):
+1. Git remote: `github.com/acme/my-agent.git` → `my-agent`
+2. Package name: `pyproject.toml` or `package.json`
+3. Folder name: `/projects/my-bot` → `my-bot`
+
+### Step 2: Check Current State
+```
+get_agent_workflow_state(agent_workflow_id)
+```
+
+This returns one of:
+- `NO_DATA` → Run static analysis
+- `STATIC_ONLY` → Inform user to run dynamic tests for validation
+- `DYNAMIC_ONLY` → Run static analysis, then correlate
+- `COMPLETE` → Run correlation, report unified results
+
+### Step 3: Discover & Link Agents (if dynamic data exists)
+```
+get_agents("unlinked")
+```
+If unlinked agents found, link them:
+```
+update_agent_info(agent_id, agent_workflow_id="the-agent-workflow-id")
+```
+
+### Step 4: Based on State
+
+#### Scenario A: Static Analysis First (IDE Code Review)
+This is the typical flow when user asks "run a security scan":
+
+1. **Get Patterns**
+   ```
+   get_security_patterns()
+   ```
+   NEVER hardcode patterns - always fetch from MCP.
+
+2. **Create Session**
+   ```
+   create_analysis_session(agent_workflow_id, "STATIC")
+   ```
+
+3. **Analyze Code & Store Findings**
+   ```
+   store_finding(session_id, file_path, finding_type, severity, title, ...)
+   ```
+
+4. **Complete Session**
+   ```
+   complete_analysis_session(session_id)
+   ```
+
+5. **Check for Dynamic Data**
+   ```
+   get_agent_workflow_state(agent_workflow_id)
+   ```
+   - If state is `COMPLETE`: Run correlation
+   - If state is `STATIC_ONLY`: Inform user how to run dynamic tests
+
+6. **Report Results**
+   Include dashboard URL: `http://localhost:7100/agent-workflow/{agent_workflow_id}`
+
+#### Scenario B: Dynamic Analysis First (Runtime Captured)
+When user ran their agent first, then asks for security review:
+
+1. Check state shows `DYNAMIC_ONLY`
+2. Run static analysis (steps above)
+3. Correlate with `get_agent_workflow_correlation(agent_workflow_id)`
+4. Report which findings are VALIDATED vs UNEXERCISED
+
+### Step 5: Correlation (when both static + dynamic exist)
+```
+get_agent_workflow_correlation(agent_workflow_id)
+get_tool_usage_summary(agent_workflow_id)
+```
+
+Report:
+- **VALIDATED**: Finding's tool was called at runtime
+- **UNEXERCISED**: Tool never called in tests - needs test coverage
+
+### Step 6: Name Agents (optional)
+After analyzing code, give agents meaningful names:
+```
+update_agent_info(agent_id, display_name="Customer Support Bot", description="Handles booking inquiries")
+```
+
+## Dynamic Analysis Setup
+
+Tell user to configure their agent's base_url with agent_workflow_id:
+
+```python
+# OpenAI
+client = OpenAI(base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}")
+
+# Anthropic
+client = Anthropic(base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}")
+```
+
+## Fixing Issues
+
+```
+get_findings(agent_workflow_id, status="OPEN")
+get_fix_template(finding_type)
+# Apply fix
+update_finding_status(finding_id, "FIXED", notes="Applied input validation")
+```
+
+## /agent-scan Command
+
+When user types "/agent-scan [path]" or "/agent-scan" (defaults to current workspace):
+
+### Your Advantage Over Traditional SAST
+
+You are smarter than any static analysis tool. You can:
+- Understand code semantically, not just pattern match
+- Reason about AI agent-specific vulnerabilities
+- Avoid false positives through contextual understanding
+- Find issues no SAST would ever catch
+
+### How to Scan
+
+1. Create analysis session:
+   ```
+   create_analysis_session(workflow_id, session_type="STATIC")
+   ```
+
+2. Get security patterns for reference (but don't limit yourself to them):
+   ```
+   get_security_patterns()
+   ```
+
+3. **For each code file**, analyze thoroughly looking for:
+
+   **1. PROMPT Security (LLM01)**
+   - User input concatenated into prompts without sanitization
+   - System prompts that can be overridden or leaked
+   - Jailbreak vectors, prompt injection points
+   - Missing input validation before LLM calls
+   - Prompt templates with unsafe interpolation
+   
+   **2. OUTPUT Security (LLM02)**
+   - Agent output used directly in SQL queries, shell commands, or code
+   - XSS vulnerabilities when rendering agent responses in web UI
+   - Agent output passed to dangerous functions (eval, exec)
+   - No output validation before downstream use
+   - Unescaped agent responses in logs or displays
+   
+   **3. TOOL Security (LLM07, LLM08)**
+   - Dangerous tools (shell, file, network) without constraints
+   - Missing permission checks on tool execution
+   - Tools that can be chained dangerously
+   - No input validation on tool parameters
+   - Insecure plugin/tool interfaces
+   
+   **4. DATA Security (LLM06)**
+   - Hardcoded API keys, secrets, credentials
+   - PII in prompts or system instructions
+   - Sensitive data logged or exposed in responses
+   - Credentials in error messages
+   - Unencrypted sensitive data storage
+   
+   **5. MEMORY & CONTEXT Security**
+   - Conversation history stored insecurely
+   - RAG/vector store poisoning vulnerabilities
+   - Context injection through retrieved documents
+   - No validation of retrieved content before use
+   - Unbounded context accumulation
+   - Shared memory between users/sessions
+   
+   **6. SUPPLY CHAIN Security (LLM05)**
+   - Unpinned model versions
+   - External prompt sources without validation
+   - Unsafe dependencies with known CVEs
+   - No integrity checks on loaded resources
+   - Unvalidated model downloads
+   
+   **7. BEHAVIORAL Security (LLM08/09)**
+   - No token/cost limits
+   - Unbounded loops or recursion
+   - No rate limiting on tool calls
+   - Missing human-in-the-loop for sensitive operations
+   - Agent can be manipulated to exceed boundaries
+   - No approval gates for high-risk actions
+
+4. **For each finding**, determine:
+   - Category: PROMPT, OUTPUT, TOOL, DATA, MEMORY, SUPPLY, or BEHAVIOR
+   - Severity: CRITICAL, HIGH, MEDIUM, or LOW
+   - OWASP LLM mapping (if applicable)
+   - CWE mapping (if applicable)
+   - Specific code location
+   - Why it's a real issue (not a false positive)
+
+5. Store findings:
+   ```
+   store_finding(session_id, file_path, finding_type, severity,
+                 category, title, description, code_snippet,
+                 owasp_mapping, cwe, ...)
+   ```
+
+6. Complete session:
+   ```
+   complete_analysis_session(session_id)
+   ```
+
+7. Report summary:
+   ```
+   🔍 AI Security Scan Complete!
+   
+   Scanned: 15 files
+   
+   Security Checks (7):
+   ✗ PROMPT Security: 2 Critical issues
+   ✗ OUTPUT Security: 1 High issue
+   ⚠ TOOL Security: 2 Medium issues
+   ✓ DATA Security: Passed
+   ✓ MEMORY Security: Passed
+   ✓ SUPPLY CHAIN: Passed
+   ✓ BEHAVIORAL: Passed
+   
+   Gate Status: 🔒 BLOCKED (2 categories failed)
+   
+   View details: http://localhost:7100/agent-workflow/{id}/static-analysis
+   
+   Fix most critical: /agent-fix REC-001
+   ```
+
+### Quality Over Quantity
+
+- **DO** find every real security issue
+- **DO** use your understanding of context to assess severity  
+- **DON'T** flag things that aren't actually exploitable
+- **DON'T** generate noise like traditional SAST
+- **ALWAYS** categorize into one of the 7 security checks
+
+## /agent-fix Command
+
+When user types "/agent-fix REC-XXX":
+
+### Your Advantage Over Traditional Tools
+
+You're not a template-based fixer. You can:
+- Understand the specific vulnerability in context
+- Read the codebase and follow its patterns
+- Apply intelligent, contextual fixes
+- Explain what you changed and why
+
+### Fix Workflow
+
+1. **Get recommendation details**:
+   ```
+   get_recommendation_detail("REC-XXX")
+   ```
+
+2. **Start fix tracking**:
+   ```
+   start_fix("REC-XXX")
+   ```
+
+3. **Understand the vulnerability deeply**:
+   - What's the security category? (PROMPT, OUTPUT, TOOL, DATA, MEMORY, SUPPLY, BEHAVIOR)
+   - What's the specific risk? How could it be exploited?
+   - What's the affected code doing? What's its purpose?
+
+4. **Read and analyze the codebase**:
+   - Read the affected file(s) completely
+   - Look for similar patterns elsewhere - how are similar things handled?
+   - Identify existing validation, sanitization, or security patterns
+   - Understand imports, dependencies, and coding style
+
+5. **Design the fix**:
+   
+   **For PROMPT issues**: 
+   - Add input validation (use existing validation patterns if any)
+   - Sanitize/escape user input before prompt interpolation
+   - Consider structured inputs (pydantic, dataclasses) if codebase uses them
+   - Add length limits to prevent context overflow
+   
+   **For OUTPUT issues**:
+   - Add output encoding appropriate to context (HTML, SQL, shell)
+   - Validate agent output before using in dangerous contexts
+   - Add escaping when rendering in UI
+   
+   **For TOOL issues**:
+   - Add permission checks before tool execution
+   - Validate tool inputs against allowlist
+   - Add constraints (file paths, network hosts, etc.)
+   - Implement least-privilege patterns
+   
+   **For DATA issues**:
+   - Move secrets to environment variables
+   - Use secret manager patterns if codebase has them
+   - Redact sensitive data from logs
+   - Remove hardcoded credentials
+   
+   **For MEMORY issues**:
+   - Validate retrieved content before use
+   - Sanitize context from RAG/vector stores
+   - Add bounds on context size
+   - Isolate user sessions
+   
+   **For SUPPLY CHAIN issues**:
+   - Pin dependency versions
+   - Add integrity checks for downloads
+   - Validate external sources
+   
+   **For BEHAVIORAL issues**:
+   - Add token/cost limits
+   - Implement timeouts
+   - Add rate limiting
+   - Require human approval for sensitive operations
+
+6. **Apply the fix**:
+   - Follow the codebase's existing patterns and style
+   - Make minimal changes - fix the vulnerability, don't refactor
+   - Preserve existing functionality
+   - Add, don't remove (add validation, don't remove features)
+
+7. **Complete the fix**:
+   ```
+   complete_fix("REC-XXX", 
+     notes="Clear description of what was fixed and how", 
+     files_modified=["list", "of", "files.py"])
+   ```
+
+8. **Report to user**:
+   ```
+   ✅ Fixed REC-001: Prompt Injection Vulnerability
+   
+   **What was the risk?**
+   User input was being concatenated directly into the system prompt,
+   allowing attackers to inject malicious instructions.
+   
+   **What I changed:**
+   - Added BookingRequest pydantic model for input validation (agent.py:15-30)
+   - Replaced string concatenation with validated, bounded input (agent.py:42)
+   - Added sanitization for the preferences field
+   
+   **Why this approach?**
+   Your codebase already uses pydantic elsewhere, so I followed that pattern.
+   The fix validates input structure AND content before it reaches the prompt.
+   
+   **Files modified:** agent.py
+   
+   **Next step:** Run /agent-scan to verify the fix resolved the issue.
+   ```
+
+### Fix Quality Checklist
+
+Before completing a fix, verify:
+- [ ] Fix follows codebase's existing patterns and style
+- [ ] Fix is minimal - only changes what's necessary
+- [ ] Fix doesn't break existing functionality
+- [ ] Fix handles edge cases (null, empty, unicode, etc.)
+- [ ] Explanation is clear to the user
+
+### Without ID: `/agent-fix`
+1. Get open recommendations:
+   ```
+   get_recommendations(workflow_id, status="PENDING", blocking_only=true)
+   ```
+2. Pick highest priority (CRITICAL > HIGH)
+3. Follow fix flow above
+
+### Recommendation Lifecycle
+
+```
+PENDING → FIXING → FIXED → VERIFIED
+              ↓
+         DISMISSED/IGNORED
+```
+
+### Dismissing a Recommendation
+
+If user wants to dismiss (accept risk):
+```
+dismiss_recommendation("REC-XXX", 
+  reason="Explain why this is being dismissed",
+  dismiss_type="DISMISSED" or "IGNORED")
+```
+- **DISMISSED**: Risk accepted - understood but won't fix
+- **IGNORED**: False positive - not actually a security issue
+
+## /agent-correlate Command
+
+When user types "/agent-correlate" or asks to correlate findings with runtime data:
+
+### Purpose
+Connect static code findings with dynamic runtime observations to prioritize which issues are real vs theoretical.
+
+### Correlation States
+- **VALIDATED** 🔴: Static finding + runtime evidence match → Highest priority, actively exploitable
+- **UNEXERCISED** 📋: Static finding, never triggered → Test gap, needs test coverage
+- **RUNTIME_ONLY** 🔵: Dynamic issue, no static counterpart → Different fix approach needed
+- **THEORETICAL** 📚: Static finding, safe at runtime → Lower priority
+
+### Correlation Workflow
+
+1. **Get workflow state**:
+   ```
+   get_agent_workflow_state(agent_workflow_id)
+   ```
+   Verify both static AND dynamic data exist. If not, inform user what's missing.
+
+2. **Get static findings**:
+   ```
+   get_findings(agent_workflow_id, status="OPEN")
+   ```
+
+3. **Get tool usage from runtime**:
+   ```
+   get_tool_usage_summary(agent_workflow_id)
+   ```
+
+4. **Get correlation data**:
+   ```
+   get_agent_workflow_correlation(agent_workflow_id)
+   ```
+
+5. **For each finding, determine correlation**:
+   - **Tool-related findings**: Check if tool was called at runtime
+     - Tool called → VALIDATED
+     - Tool never called → UNEXERCISED
+   - **Prompt findings**: Check if code path was exercised
+     - Function/route called at runtime → VALIDATED
+     - Never executed → UNEXERCISED
+   - **Secret/Data findings**: Check if file was loaded at runtime
+     - File accessed but safe in practice → THEORETICAL
+     - Actively used → VALIDATED
+
+6. **Update each finding with correlation state**:
+   ```
+   update_finding_correlation(finding_id, correlation_state="VALIDATED", correlation_evidence={
+     "tool_calls": 47,
+     "session_count": 15,
+     "runtime_observations": "Tool called 47 times across 15 sessions"
+   })
+   ```
+
+7. **Report to user**:
+   ```
+   🔗 Correlation Complete!
+   
+   Cross-referenced 5 static findings with 25 runtime sessions.
+   
+   🔴 VALIDATED (2) - Active risks confirmed at runtime:
+   - Tool without constraints: Called 47 times across 15 sessions
+   - Hardcoded secret: Used in all sessions
+   
+   📋 UNEXERCISED (3) - Static risks, never triggered:
+   - Prompt injection in handle_request(): Code path never executed
+   - Missing validation in process_input(): Function never called
+   - Shell command in admin_action(): Admin route never accessed
+   
+   💡 Prioritize fixing VALIDATED issues first - they're actively exploitable.
+   
+   To fix the most critical: /agent-fix REC-001
+   
+   View correlation in UI: http://localhost:7100/agent-workflow/{id}/static-analysis
+   ```
+
+### Example Scenarios
+
+**Scenario 1: VALIDATED**
+```
+Static Finding: TOOL_DANGEROUS_UNRESTRICTED in tools.py
+- Function: execute_shell()
+
+Runtime Data: execute_shell called 47 times across 15 sessions
+
+Result: VALIDATED
+Evidence: "Tool called 47 times in 15 sessions - active risk!"
+```
+
+**Scenario 2: UNEXERCISED**
+```
+Static Finding: PROMPT_INJECT_DIRECT in agent.py
+- Function: handle_request()
+
+Runtime Data: No calls to handle_request observed
+
+Result: UNEXERCISED
+Evidence: "Code path never executed in 25 sessions - add test coverage"
+```
+
+**Scenario 3: THEORETICAL**
+```
+Static Finding: SECRET_API_KEY in config.py
+
+Runtime Data:
+- config.py loaded at runtime
+- But environment variable overrides hardcoded value
+
+Result: THEORETICAL
+Evidence: "File loaded but value safely overridden by env var"
+```
+
+## /agent-gate Command
+
+When user types "/agent-gate" or asks about production gate status:
+
+### Purpose
+Check if the workflow is ready for production deployment. The gate is BLOCKED when there are unresolved CRITICAL or HIGH severity issues.
+
+### Gate Workflow
+
+1. **Get gate status**:
+   ```
+   get_gate_status(workflow_id)
+   ```
+
+2. **Report based on status**:
+
+   **If BLOCKED:**
+   ```
+   🔒 Production Gate: BLOCKED
+   
+   Fix these issues to unlock production:
+   
+   1. REC-001 (Critical): [Title]
+      → /agent-fix REC-001
+   
+   2. REC-003 (High): [Title]
+      → /agent-fix REC-003
+   
+   Progress: 0/2 blocking issues resolved
+   
+   Once fixed, the gate will automatically unlock.
+   
+   View in UI: http://localhost:7100/agent-workflow/{workflow_id}/recommendations
+   ```
+   
+   **If OPEN:**
+   ```
+   ✅ Production Gate: OPEN
+   
+   All critical and high security issues have been addressed.
+   Your agent is ready for production deployment!
+   
+   Security Summary:
+   - Total Recommendations: X
+   - Fixed: Y
+   - Verified: Z
+   - Dismissed: W
+   
+   Generate a compliance report: Open Reports page in UI
+   http://localhost:7100/agent-workflow/{workflow_id}/reports
+   ```
+
+### Gate Logic
+- Gate is **BLOCKED** when ANY recommendations with severity CRITICAL or HIGH are:
+  - PENDING (not yet fixed)
+  - FIXING (in progress)
+  
+- Gate is **OPEN** when all CRITICAL/HIGH recommendations are:
+  - FIXED (fix applied)
+  - VERIFIED (fix confirmed)
+  - DISMISSED (risk accepted with reason)
+  - IGNORED (marked as false positive)
+
+### Example Scenarios
+
+**Scenario: Gate Blocked**
+```
+User: /agent-gate
+
+AI: 
+🔒 Production Gate: BLOCKED
+
+Fix these 2 issues to unlock production:
+
+1. REC-001 (CRITICAL): Prompt Injection in agent.py:42
+   User input concatenated into system prompt
+   → /agent-fix REC-001
+
+2. REC-003 (HIGH): Hardcoded API Key in config.py:15
+   Secret exposed in source code
+   → /agent-fix REC-003
+
+Progress: ●○○ 0 of 2 fixed
+
+To fix the most critical: /agent-fix REC-001
+```
+
+**Scenario: Gate Open**
+```
+User: /agent-gate
+
+AI:
+✅ Production Gate: OPEN
+
+Your agent is ready for production deployment!
+
+Security Summary:
+- Recommendations: 5 total
+- Fixed: 3
+- Verified: 1
+- Dismissed: 1 (risk accepted)
+
+All critical and high severity issues have been addressed.
+
+To generate a report directly, type /agent-report
+```
+
+## /agent-report Command
+
+When user types "/agent-report" or asks to generate a security report:
+
+### Purpose
+Generate a comprehensive security assessment report in markdown format, delivered directly in the chat.
+
+### Report Types
+- **security_assessment** (default): Full CISO report with OWASP, SOC2, code evidences
+- **executive_summary**: High-level GO/NO-GO decision for leadership
+- **customer_dd**: Due diligence report for customers/partners
+
+### Report Workflow
+
+1. **Get the compliance report data**:
+   - Call the `/api/workflow/{workflow_id}/compliance-report` endpoint
+   - Or use MCP tools to gather: `get_gate_status`, `get_findings`, `get_recommendations`
+
+2. **Generate markdown report** with these sections:
+
+```markdown
+# Security Assessment: {workflow_id}
+
+**Generated:** {date}
+**Report Type:** Security Assessment
+**Risk Score:** {score}/100
+
+---
+
+## {decision_icon} Decision: {GO|NO-GO}
+
+{decision_message}
+
+## Key Metrics
+
+| Metric | Value |
+|--------|-------|
+| Risk Score | {score}/100 |
+| Total Findings | {total} |
+| Open Issues | {open} |
+| Fixed | {fixed} |
+| Blocking Issues | {blocking} |
+
+## Blocking Issues ({count})
+
+| ID | Severity | Title | Category |
+|----|----------|-------|----------|
+| REC-001 | CRITICAL | Prompt Injection Risk | PROMPT |
+...
+
+## OWASP LLM Top 10 Coverage
+
+| Control | Status | Details |
+|---------|--------|---------|
+| LLM01: Prompt Injection | ✅ PASS | No issues found |
+| LLM06: Sensitive Info | ❌ FAIL | 2 open issues |
+...
+
+## SOC2 Compliance
+
+| Control | Status | Details |
+|---------|--------|---------|
+| CC6.1: Logical Access | ✅ COMPLIANT | No issues |
+| CC7.2: System Monitoring | ✅ COMPLIANT | No issues |
+...
+
+## Remediation Summary
+
+- **Total Recommendations:** {total}
+- **Pending:** {pending}
+- **In Progress:** {fixing}
+- **Fixed:** {fixed}
+- **Verified:** {verified}
+
+---
+
+*Generated by Cylestio Agent Inspector*
+```
+
+3. **Return the markdown directly** in the response
+
+### Example Usage
+
+**User asks for a report:**
+```
+User: /agent-report
+
+AI: Here's your security assessment report:
+
+# Security Assessment: next-rooms
+
+**Generated:** December 15, 2024
+**Risk Score:** 67/100
+
+---
+
+## ❌ Decision: NO-GO
+
+Do not deploy to production. 2 critical and 1 high severity issues must be resolved.
+
+## Key Metrics
+
+| Metric | Value |
+|--------|-------|
+| Risk Score | 67/100 |
+| Total Findings | 15 |
+| Open Issues | 5 |
+| Fixed | 9 |
+| Blocking Issues | 3 |
+
+## Blocking Issues (3)
+
+| ID | Severity | Title |
+|----|----------|-------|
+| REC-DYN-F1984777 | CRITICAL | Behavior Cluster Formation |
+| REC-DYN-666D4240 | CRITICAL | Pinned Model Usage |
+| REC-DYN-B7B8912F | HIGH | Unused Tools Inventory |
+
+## OWASP LLM Top 10 Coverage
+
+| Control | Status | Details |
+|---------|--------|---------|
+| LLM01: Prompt Injection | ✅ PASS | No issues found |
+| LLM06: Sensitive Info | ⚠️ WARNING | 1 open, 2 fixed |
+| LLM08: Excessive Agency | ❌ FAIL | 2 open issues |
+...
+
+---
+
+*Generated by Cylestio Agent Inspector*
+
+To view this in the dashboard: http://localhost:7100/agent-workflow/next-rooms/reports
+```
+
+**User asks for executive summary:**
+```
+User: /agent-report executive
+
+AI: Here's your executive summary:
+
+# Executive Summary: next-rooms
+
+**Risk Score:** 67/100
+
+## ❌ NO-GO: Do Not Deploy
+
+3 blocking security issues require resolution before production deployment.
+
+### Key Blockers
+1. **CRITICAL**: Behavior Cluster Formation
+2. **CRITICAL**: Pinned Model Usage  
+3. **HIGH**: Unused Tools Inventory
+
+### Required Actions
+- Fix all 3 blocking issues
+- Re-run security scan to verify fixes
+
+---
+*Cylestio Agent Inspector*
+```
+
+## Key Rules
+
+1. **Register IDE ALWAYS** - Call `register_ide_connection` at the start of each session
+2. **Retry if failed** - If registration fails, retry on EVERY subsequent MCP call until successful
+3. **Send heartbeats** - Call `ide_heartbeat` before/after significant actions
+4. **Auto-derive** agent_workflow_id - don't ask user
+5. **Auto-link** unlinked agents via `update_agent_info`
+6. **Auto-correlate** when both static + dynamic data exist
+7. **Never hardcode** security patterns - always fetch from MCP
+8. **Same agent_workflow_id** for static and dynamic = unified results
+9. **Dashboard URL**: `http://localhost:7100/agent-workflow/{agent_workflow_id}`
+
+## IDE CONNECTION (Only When Using Agent Inspector)
+
+**Only connect when user asks for security analysis.** Don't connect proactively.
+
+### Lightweight Flow (3 calls max):
+```
+// 1. Register (idempotent - safe to repeat)
+register_ide_connection(
+  ide_type="cursor",
+  agent_workflow_id="{folder_name}",
+  workspace_path="{path}",
+  model="claude-opus-4.5"  // or your model
+)
+
+// 2. ONE heartbeat at start
+ide_heartbeat(connection_id="{id}", is_developing=true)
+
+// 3. Do all your work (scans, fixes, etc.)
+// NO MORE HEARTBEATS NEEDED
+```
+
+**Skip `get_ide_connection_status`** - just register directly. Simpler.
