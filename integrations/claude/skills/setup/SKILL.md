@@ -7,6 +7,62 @@ description: Install, configure, and ensure Agent Inspector is running for AI ag
 
 This skill helps you install, configure, and ensure Agent Inspector is running for AI agent security analysis.
 
+---
+
+## ⛔ READ THIS FIRST - CRITICAL RULES ⛔
+
+### Rule 1: The CLI Has Only TWO Commands
+
+The `agent-inspector` CLI accepts ONLY a provider name. Nothing else.
+
+```
+agent-inspector anthropic    ← CORRECT (starts server with Anthropic provider)
+agent-inspector openai       ← CORRECT (starts server with OpenAI provider)
+```
+
+**THESE COMMANDS DO NOT EXIST - NEVER TRY THEM:**
+
+| ❌ WRONG Command | Why It Fails |
+|------------------|--------------|
+| `agent-inspector start` | "start" is not a valid provider |
+| `agent-inspector serve` | "serve" is not a valid provider |
+| `agent-inspector status` | "status" is not a valid provider |
+| `agent-inspector run` | "run" is not a valid provider |
+| `agent-inspector server` | "server" is not a valid provider |
+| `agent-inspector launch` | "launch" is not a valid provider |
+| `agent-inspector --start` | Not a valid flag |
+| `agent-inspector --serve` | Not a valid flag |
+| `agent-inspector --background` | Not a valid flag |
+| `agent-inspector --daemon` | Not a valid flag |
+| `agent-inspector anthropic --background` | --background is not valid |
+
+**The ONLY valid commands are:**
+- `agent-inspector anthropic`
+- `agent-inspector openai`
+- `agent-inspector --help`
+- `agent-inspector --show-configs`
+
+### Rule 2: Never Run Network Commands
+
+These will hang your session indefinitely:
+
+| ❌ NEVER Run | Will Hang |
+|--------------|-----------|
+| `curl http://localhost:...` | Yes, forever |
+| `wget http://...` | Yes, forever |
+| `nc -z localhost ...` | Yes, forever |
+| `ping ...` | Yes, forever |
+
+Use MCP tool calls to verify connectivity instead.
+
+### Rule 3: Stop If Server Won't Start
+
+If Agent Inspector fails to start, **STOP IMMEDIATELY**.
+Do NOT continue to scan. Do NOT do a "manual scan".
+Tell the user to start the server manually and try again.
+
+---
+
 ## Quick Start
 
 1. **Install**: `pip install agent-inspector`
@@ -16,46 +72,6 @@ This skill helps you install, configure, and ensure Agent Inspector is running f
 ## Preflight Check
 
 Use this section to ensure Agent Inspector is running before any security analysis.
-
-### CRITICAL: CLI Syntax
-
-The agent-inspector CLI has **exactly TWO valid commands**:
-
-```bash
-agent-inspector anthropic   # Start with Anthropic provider
-agent-inspector openai      # Start with OpenAI provider
-```
-
-**THERE ARE NO OTHER SUBCOMMANDS.** Do not invent or guess commands.
-
-❌ **NEVER run these - they DO NOT EXIST:**
-```bash
-agent-inspector start       # WRONG - does not exist
-agent-inspector serve       # WRONG - does not exist
-agent-inspector status      # WRONG - does not exist
-agent-inspector run         # WRONG - does not exist
-agent-inspector --background # WRONG - not a valid flag
-```
-
-✅ **ONLY these work:**
-```bash
-agent-inspector anthropic   # Correct
-agent-inspector openai      # Correct
-agent-inspector --help      # Shows help
-agent-inspector --show-configs  # Shows bundled configs
-```
-
-### CRITICAL: Commands That Will Hang
-
-**NEVER run these commands** - they will freeze your session:
-```bash
-curl http://localhost:...   # NEVER - will hang
-wget http://...             # NEVER - will hang
-nc -z localhost ...         # NEVER - will hang
-ping ...                    # NEVER - will hang
-```
-
-Use MCP tool calls to verify connectivity instead.
 
 ### Step 1: Check if Already Running
 
