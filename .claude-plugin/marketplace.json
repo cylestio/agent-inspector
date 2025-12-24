@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "cylestio",
-  "version": "1.0.0",
+  "version": "1.0.7",
   "description": "Security analysis plugins for AI agents by Cylestio",
   "owner": {
     "name": "Cylestio",
@@ -11,7 +11,7 @@
     {
       "name": "agent-inspector",
       "description": "AI Agent Security Analysis - scan, fix, analyze, and report on AI agent vulnerabilities using OWASP LLM Top 10",
-      "version": "1.0.0",
+      "version": "1.0.7",
       "author": {
         "name": "Cylestio",
         "url": "https://github.com/cylestio"
