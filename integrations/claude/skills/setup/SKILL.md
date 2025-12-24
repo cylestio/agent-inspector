@@ -17,18 +17,45 @@ This skill helps you install, configure, and ensure Agent Inspector is running f
 
 Use this section to ensure Agent Inspector is running before any security analysis.
 
-### IMPORTANT: Commands That Will Hang
+### CRITICAL: CLI Syntax
+
+The agent-inspector CLI has **exactly TWO valid commands**:
+
+```bash
+agent-inspector anthropic   # Start with Anthropic provider
+agent-inspector openai      # Start with OpenAI provider
+```
+
+**THERE ARE NO OTHER SUBCOMMANDS.** Do not invent or guess commands.
+
+❌ **NEVER run these - they DO NOT EXIST:**
+```bash
+agent-inspector start       # WRONG - does not exist
+agent-inspector serve       # WRONG - does not exist
+agent-inspector status      # WRONG - does not exist
+agent-inspector run         # WRONG - does not exist
+agent-inspector --background # WRONG - not a valid flag
+```
+
+✅ **ONLY these work:**
+```bash
+agent-inspector anthropic   # Correct
+agent-inspector openai      # Correct
+agent-inspector --help      # Shows help
+agent-inspector --show-configs  # Shows bundled configs
+```
+
+### CRITICAL: Commands That Will Hang
 
 **NEVER run these commands** - they will freeze your session:
 ```bash
-# NEVER - will hang indefinitely
-curl http://localhost:...
-wget http://...
-nc -z localhost ...
-ping ...
+curl http://localhost:...   # NEVER - will hang
+wget http://...             # NEVER - will hang
+nc -z localhost ...         # NEVER - will hang
+ping ...                    # NEVER - will hang
 ```
 
-Instead, use the MCP tool calls to verify connectivity.
+Use MCP tool calls to verify connectivity instead.
 
 ### Step 1: Check if Already Running
 
@@ -65,28 +92,26 @@ grep -r "import openai" . --include="*.py" | head -1
 ```
 
 **Decision logic:**
-- If `anthropic` found → use `anthropic` provider
-- If `openai` found → use `openai` provider
-- If both found → prefer `anthropic` (more common in agent frameworks)
+- If `anthropic` found → use `anthropic`
+- If `openai` found → use `openai`
+- If both found → prefer `anthropic`
 - If neither found → ask user which provider their agent uses
-
-**Provider options:**
-| Provider | Command | Use when |
-|----------|---------|----------|
-| `anthropic` | `agent-inspector anthropic` | Agent uses Anthropic/Claude API |
-| `openai` | `agent-inspector openai` | Agent uses OpenAI API |
 
 ### Step 4: Start in Background
 
-Start agent-inspector with detected provider:
+Start agent-inspector with the detected provider (anthropic or openai):
 
 ```bash
-nohup agent-inspector {provider} > /tmp/agent-inspector.log 2>&1 &
+nohup agent-inspector anthropic > /tmp/agent-inspector.log 2>&1 &
+```
+OR
+```bash
+nohup agent-inspector openai > /tmp/agent-inspector.log 2>&1 &
 ```
 
 Tell user:
 ```
-Starting Agent Inspector ({provider} provider) in background...
+Starting Agent Inspector (anthropic provider) in background...
 Log file: /tmp/agent-inspector.log
 ```
 
@@ -123,15 +148,6 @@ Agent Inspector is running!
 Ready for security analysis.
 ```
 
-**If timeout:**
-```
-Agent Inspector failed to start within 15 seconds.
-Check log: /tmp/agent-inspector.log
-
-To start manually:
-  agent-inspector {provider}
-```
-
 ### Step 6: Verify MCP Connection
 
 After startup, verify MCP works:
@@ -140,6 +156,31 @@ get_security_patterns()
 ```
 
 If this succeeds, preflight is complete. Proceed with your task.
+
+### HARD STOP: If Server Fails to Start
+
+**If the server fails to start or MCP tools are not available, you MUST STOP.**
+
+Do NOT continue with scanning or analysis. Display this message and wait for user action:
+
+```
+ERROR: Agent Inspector is not running and could not be started.
+
+The MCP tools required for security analysis are not available.
+
+To fix this, please run in a separate terminal:
+  agent-inspector anthropic
+
+Or for OpenAI-based agents:
+  agent-inspector openai
+
+Once the server is running (you'll see the dashboard at http://localhost:7100),
+come back and try again.
+
+Check logs for errors: cat /tmp/agent-inspector.log
+```
+
+**DO NOT attempt to do a "manual scan" or continue without MCP tools.**
 
 ## Ports Reference
 
