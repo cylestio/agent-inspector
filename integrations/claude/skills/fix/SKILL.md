@@ -1,6 +1,6 @@
 ---
 name: agent-inspector-fix
-description: Fix security vulnerabilities in AI agent code. Use when user says /fix, asks to fix a recommendation (REC-XXX), remediate issues, or apply security fixes.
+description: Apply intelligent, contextual security fixes to AI agent vulnerabilities. Fix prompt injection, output handling, tool security, data leaks, memory issues, supply chain, and behavioral risks. Use when user says fix, asks to remediate a recommendation (REC-XXX), apply security patches, or resolve vulnerabilities.
 ---
 
 # Security Fix
@@ -17,7 +17,7 @@ You're not a template-based fixer. You can:
 
 ## Fix Workflow
 
-### With Specific ID: `/fix REC-XXX`
+### With Specific ID: `/agent-inspector:fix REC-XXX`
 
 1. **Get recommendation details**:
    ```
@@ -113,10 +113,10 @@ You're not a template-based fixer. You can:
 
    **Files modified:** agent.py
 
-   **Next step:** Run /scan to verify the fix resolved the issue.
+   **Next step:** Run /agent-inspector:scan to verify the fix resolved the issue.
    ```
 
-### Without ID: `/fix`
+### Without ID: `/agent-inspector:fix`
 
 1. Get open recommendations:
    ```

@@ -1,6 +1,6 @@
 ---
 name: agent-inspector-scan
-description: Run static security scan on AI agent code. Use when user says /scan, asks for security scan, vulnerability check, OWASP analysis, or wants to check their agent for security issues.
+description: Run comprehensive static security analysis on AI agent code using OWASP LLM Top 10 framework. Analyze prompts, outputs, tools, data handling, memory, supply chain, and behavioral patterns. Use when user asks for security scan, vulnerability check, OWASP analysis, code review for security, or wants to check their AI agent for security issues.
 ---
 
 # Static Security Scan
@@ -149,7 +149,7 @@ Gate Status: BLOCKED (2 categories failed)
 
 View details: http://localhost:7100/agent-workflow/{id}/static-analysis
 
-Fix most critical: /fix REC-001
+Fix most critical: /agent-inspector:fix REC-001
 ```
 
 ## Quality Over Quantity

@@ -1,6 +1,6 @@
 ---
 name: agent-inspector-analyze
-description: Run dynamic runtime analysis on AI agent sessions. Use when user says /analyze, asks for runtime analysis, behavioral analysis, or wants to analyze captured agent sessions.
+description: Run dynamic runtime analysis on captured AI agent sessions. Analyze token usage, tool calls, behavioral patterns, PII detection, and model pinning. Use when user asks for runtime analysis, dynamic testing, behavioral analysis, or wants to analyze captured agent sessions through the proxy.
 ---
 
 # Dynamic Runtime Analysis
@@ -106,7 +106,7 @@ View details: http://localhost:7100/agent-workflow/{id}/dynamic-analysis
 
 If static data also exists, suggest running correlation:
 ```
-/correlate
+/agent-inspector:correlate
 ```
 
 This will show which static findings are VALIDATED (confirmed at runtime) vs UNEXERCISED (never triggered).
