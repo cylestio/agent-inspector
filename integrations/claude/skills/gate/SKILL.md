@@ -7,6 +7,18 @@ description: Check production deployment readiness for AI agents. Verify all CRI
 
 Check if the agent workflow is ready for production deployment. The gate is BLOCKED when there are unresolved CRITICAL or HIGH severity issues.
 
+## Prerequisites
+
+**You MUST run the `agent-inspector-setup` skill (Preflight Check section) BEFORE proceeding.**
+
+This is NOT optional. The setup skill's Preflight Check will:
+1. Check if agent-inspector is already running
+2. Auto-detect your LLM provider (OpenAI/Anthropic)
+3. Start the server in background if needed
+4. Verify MCP connection is working
+
+**DO NOT skip this step.** If you proceed without running the Preflight Check, MCP tools will fail.
+
 ## Gate Workflow
 
 ### 1. Get Gate Status

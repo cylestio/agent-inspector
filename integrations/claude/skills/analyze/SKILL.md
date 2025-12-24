@@ -9,6 +9,18 @@ Analyze runtime sessions captured through the proxy to detect behavioral issues,
 
 ## Prerequisites
 
+**You MUST run the `agent-inspector-setup` skill (Preflight Check section) BEFORE proceeding.**
+
+This is NOT optional. The setup skill's Preflight Check will:
+1. Check if agent-inspector is already running
+2. Auto-detect your LLM provider (OpenAI/Anthropic)
+3. Start the server in background if needed
+4. Verify MCP connection is working
+
+**DO NOT skip this step.** If you proceed without running the Preflight Check, MCP tools will fail.
+
+## Additional Requirements
+
 1. Agent must send traffic through the proxy:
    ```python
    client = OpenAI(base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}")
