@@ -7,6 +7,8 @@ description: Install, configure, and ensure Agent Inspector is running for AI ag
 
 Agent Inspector is a security analysis server that provides MCP tools for scanning AI agent code.
 
+Follow these steps exactly
+
 ## FOLLOW THESE EXACT STEPS
 
 ### Step 1: Try MCP Tool
@@ -20,16 +22,11 @@ get_security_patterns()
 
 **If it fails** → Continue to Step 2.
 
-### Step 2: Check if Installed
+### Step 2: Install or Update
 
-Run exactly:
+Always run this to ensure latest version:
 ```bash
-which agent-inspector
-```
-
-If not found, install:
-```bash
-pip install agent-inspector
+pip install --upgrade agent-inspector
 ```
 
 ### Step 3: Detect Provider
