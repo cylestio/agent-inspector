@@ -17,76 +17,76 @@ This skill helps you install, configure, and ensure Agent Inspector is running f
 
 Use this section to ensure Agent Inspector is running before any security analysis.
 
-### IMPORTANT: Commands That Will Hang
+### CLI Reference
 
-**NEVER run these commands** - they will freeze your session:
+The `agent-inspector` CLI **requires** a provider name:
+
 ```bash
-# NEVER - will hang indefinitely
-curl http://localhost:...
-wget http://...
-nc -z localhost ...
-ping ...
+agent-inspector <provider>
 ```
 
-Instead, use the MCP tool calls to verify connectivity.
+Where `<provider>` must be one of:
+- `anthropic` - For agents using Anthropic/Claude API
+- `openai` - For agents using OpenAI API
+
+**Examples:**
+```bash
+agent-inspector anthropic    # Start with Anthropic provider
+agent-inspector openai       # Start with OpenAI provider
+```
+
+Optional flags:
+- `--help` - Show help
+- `--show-configs` - Show bundled configs
+- `--port 8000` - Override default port
+- `--trace-port 9000` - Override trace port
 
 ### Step 1: Check if Already Running
 
-Try calling any MCP tool:
+Call any MCP tool to verify the server is running:
 ```
 get_security_patterns()
 ```
 
-**If successful** → Agent Inspector is running. Done - proceed with your task.
+**If successful** → Agent Inspector is running. Proceed with your task.
 
-**If fails** (connection refused, timeout, tool not found) → Continue to Step 2.
+**If fails** → Continue to Step 2.
 
 ### Step 2: Check Installation
 
-Run:
 ```bash
 which agent-inspector || pip show agent-inspector
 ```
 
-**If not installed:**
+If not found, install:
 ```bash
 pip install agent-inspector
 ```
 
 ### Step 3: Detect Provider
 
-Scan the codebase to determine which LLM provider the agent uses:
-
+Scan the codebase:
 ```bash
-grep -r "from anthropic" . --include="*.py" | head -1
-grep -r "from openai" . --include="*.py" | head -1
-grep -r "import anthropic" . --include="*.py" | head -1
-grep -r "import openai" . --include="*.py" | head -1
+grep -r "from anthropic\|import anthropic" . --include="*.py" | head -1
+grep -r "from openai\|import openai" . --include="*.py" | head -1
 ```
 
-**Decision logic:**
-- If `anthropic` found → use `anthropic` provider
-- If `openai` found → use `openai` provider
-- If both found → prefer `anthropic` (more common in agent frameworks)
-- If neither found → ask user which provider their agent uses
-
-**Provider options:**
-| Provider | Command | Use when |
-|----------|---------|----------|
-| `anthropic` | `agent-inspector anthropic` | Agent uses Anthropic/Claude API |
-| `openai` | `agent-inspector openai` | Agent uses OpenAI API |
+- If `anthropic` found → use `anthropic`
+- If `openai` found → use `openai`
+- If both found → use `anthropic`
+- If neither → ask user
 
 ### Step 4: Start in Background
 
-Start agent-inspector with detected provider:
+Start with the detected provider (use `anthropic` or `openai`):
 
 ```bash
-nohup agent-inspector {provider} > /tmp/agent-inspector.log 2>&1 &
+nohup agent-inspector anthropic > /tmp/agent-inspector.log 2>&1 &
 ```
 
 Tell user:
 ```
-Starting Agent Inspector ({provider} provider) in background...
+Starting Agent Inspector (anthropic provider) in background...
 Log file: /tmp/agent-inspector.log
 ```
 
@@ -123,14 +123,18 @@ Agent Inspector is running!
 Ready for security analysis.
 ```
 
-**If timeout:**
+**If timeout, STOP and show this message:**
 ```
 Agent Inspector failed to start within 15 seconds.
 Check log: /tmp/agent-inspector.log
 
-To start manually:
-  agent-inspector {provider}
+To start manually in a separate terminal:
+  agent-inspector anthropic
+
+Once the server is running, come back and try again.
 ```
+
+Wait for user to confirm the server is running before proceeding.
 
 ### Step 6: Verify MCP Connection
 
@@ -139,7 +143,19 @@ After startup, verify MCP works:
 get_security_patterns()
 ```
 
-If this succeeds, preflight is complete. Proceed with your task.
+**If successful** → Preflight complete. Proceed with your task.
+
+**If MCP fails** → STOP and show this message:
+```
+Agent Inspector is not running.
+
+To start the server, run in a separate terminal:
+  agent-inspector anthropic
+
+Once the dashboard is visible at http://localhost:7100, try again.
+```
+
+Wait for user to confirm before proceeding.
 
 ## Ports Reference
 
