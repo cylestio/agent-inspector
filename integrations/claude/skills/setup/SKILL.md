@@ -19,18 +19,27 @@ Use this section to ensure Agent Inspector is running before any security analys
 
 ### CLI Reference
 
-The `agent-inspector` CLI takes a provider name as argument:
+The `agent-inspector` CLI **requires** a provider name:
 
+```bash
+agent-inspector <provider>
+```
+
+Where `<provider>` must be one of:
+- `anthropic` - For agents using Anthropic/Claude API
+- `openai` - For agents using OpenAI API
+
+**Examples:**
 ```bash
 agent-inspector anthropic    # Start with Anthropic provider
 agent-inspector openai       # Start with OpenAI provider
 ```
 
-Other available flags:
-- `agent-inspector --help` - Show help
-- `agent-inspector --show-configs` - Show bundled configs
-- `agent-inspector --port 8000` - Override default port
-- `agent-inspector --trace-port 9000` - Override trace port
+Optional flags:
+- `--help` - Show help
+- `--show-configs` - Show bundled configs
+- `--port 8000` - Override default port
+- `--trace-port 9000` - Override trace port
 
 ### Step 1: Check if Already Running
 
