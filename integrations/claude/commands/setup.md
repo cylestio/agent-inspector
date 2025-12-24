@@ -69,13 +69,40 @@ Call the MCP tool again:
 get_security_patterns()
 ```
 
-**If it works** → Success! Proceed with your task.
+### Step 6: Report Status
 
-**If it still fails** → STOP. Show this message and wait for user:
+After completing setup, always show this status report:
+
+**If everything works:**
 ```
-Agent Inspector MCP is not responding.
+Agent Inspector Status:
+✓ Server running: Yes (http://localhost:7100)
+✓ MCP connected: Yes
 
-Try to run `/mcp` and reload the connection,
+Ready to scan! Run /agent-inspector:scan to start.
+```
+
+**If server running but MCP fails:**
+```
+Agent Inspector Status:
+✓ Server running: Yes (http://localhost:7100)
+✗ MCP connected: No
+
+Recommendations:
+- Run /mcp to reload the MCP connection
+- Check server logs: cat /tmp/agent-inspector.log
+```
+
+**If server not running:**
+```
+Agent Inspector Status:
+✗ Server running: No
+✗ MCP connected: No
+
+Recommendations:
+- Start server manually: agent-inspector {provider}
+- Check if port 7100 is in use: lsof -ti:7100
+- Verify installation: pip install --upgrade agent-inspector
 ```
 
 ---
