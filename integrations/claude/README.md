@@ -29,6 +29,7 @@ agent-inspector anthropic
 
 | Command | Description |
 |---------|-------------|
+| `/setup` | Install, configure, and ensure Agent Inspector is running |
 | `/scan` | Run static security scan on your agent code |
 | `/fix REC-XXX` | Fix a specific security recommendation |
 | `/analyze` | Run dynamic runtime analysis on captured sessions |

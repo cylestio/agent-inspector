@@ -7,6 +7,18 @@ description: Generate security compliance reports for AI agents including OWASP 
 
 Generate comprehensive security assessment reports in markdown format, delivered directly in the chat.
 
+## Prerequisites
+
+**You MUST run the `agent-inspector-setup` skill (Preflight Check section) BEFORE proceeding.**
+
+This is NOT optional. The setup skill's Preflight Check will:
+1. Check if agent-inspector is already running
+2. Auto-detect your LLM provider (OpenAI/Anthropic)
+3. Start the server in background if needed
+4. Verify MCP connection is working
+
+**DO NOT skip this step.** If you proceed without running the Preflight Check, MCP tools will fail.
+
 ## Report Types
 
 | Type | Command | Description |
