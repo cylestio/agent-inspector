@@ -6,27 +6,9 @@ Agent Inspector gives you instant visibility into your AI agents with ready-to-r
 
 Ideal for development-time evaluation and for running alongside your test suite (including CI).
 
-## Installation
-
-Install via `pipx` (recommended):
-
-```bash
-pipx install agent-inspector
-```
-
-Or via `pip`:
-
-```bash
-pip install agent-inspector
-```
-
-Or run directly with `uvx`:
-
-```bash
-uvx agent-inspector
-```
-
 ## IDE Setup
+
+IDE integration provides MCP query tools for inspecting sessions, risk metrics, and security findings directly in your editor. It also enables static analysis to scan your agent code for vulnerabilities before runtime.
 
 ### Claude Code
 
@@ -54,14 +36,24 @@ Fetch and follow instructions from https://raw.githubusercontent.com/cylestio/ag
 
 After setup, restart Cursor and approve the MCP server when prompted.
 
-### Manual (Dynamic Analysis Only)
+## Install without IDE Integration
 
-If you just want runtime tracing without the full IDE integration:
+Install via `pipx` (recommended):
 
 ```bash
-# Start the server
-agent-inspector anthropic   # or: openai
+pipx install agent-inspector
+agent-inspector openai   # or: anthropic
 ```
+
+Or run directly with `uvx`:
+
+```bash
+uvx agent-inspector openai   # or: anthropic
+```
+
+This starts:
+- A proxy server on port 4000 (configurable)
+- A live trace dashboard on port 7100 (configurable)
 
 Point your agent to the proxy:
 
@@ -74,24 +66,6 @@ client = Anthropic(base_url="http://localhost:4000")
 ```
 
 Open http://localhost:7100 to view the live dashboard.
-
-## Quick Start
-
-Launch Agent Inspector for your provider:
-
-```bash
-# For OpenAI
-agent-inspector openai
-
-# For Anthropic
-agent-inspector anthropic
-```
-
-This starts:
-- A proxy server on port 4000 (configurable)
-- A live trace dashboard on port 7100 (configurable)
-
-Point your AI application to `http://localhost:4000` and start monitoring immediately.
 
 ## Features
 
