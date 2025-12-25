@@ -69,13 +69,40 @@ Call the MCP tool again:
 get_security_patterns()
 ```
 
-**If it works** → Success! Proceed with your task.
+### Step 6: Report Status
 
-**If it still fails** → STOP. Show this message and wait for user:
+After completing setup, always show this status report:
+
+**If everything works:**
 ```
-Agent Inspector MCP is not responding.
+Agent Inspector Status:
+✓ Server running: Yes (http://localhost:7100)
+✓ MCP connected: Yes
 
-Try to run `/mcp` and reload the connection,
+Ready to scan! Run /agent-inspector:scan to start.
+```
+
+**If server running but MCP fails:**
+```
+Agent Inspector Status:
+✓ Server running: Yes (http://localhost:7100)
+✗ MCP connected: No
+
+Recommendations:
+- Run /mcp to reload the MCP connection
+- Check server logs: cat /tmp/agent-inspector.log
+```
+
+**If server not running:**
+```
+Agent Inspector Status:
+✗ Server running: No
+✗ MCP connected: No
+
+Recommendations:
+- Start server manually: agent-inspector {provider}
+- Check if port 7100 is in use: lsof -ti:7100
+- Verify installation: pip install --upgrade agent-inspector
 ```
 
 ---
@@ -106,8 +133,9 @@ agent-inspector openai
 | `/agent-inspector:status` | Check dynamic analysis availability |
 | `/agent-inspector:gate` | Check production gate status |
 | `/agent-inspector:report` | Generate full security report |
+| `/agent-inspector:debug` | Debug workflow - explore agents, sessions, events |
 
-## MCP Tools Available (17 total)
+## MCP Tools Available (20 total)
 
 ### Analysis Tools
 | Tool | Description |
@@ -137,6 +165,13 @@ agent-inspector openai
 |------|-------------|
 | `get_agents` | List agents (filter by agent_workflow_id or "unlinked") |
 | `update_agent_info` | Link agents to agent workflows, set display names |
+
+### Workflow Query Tools
+| Tool | Description |
+|------|-------------|
+| `get_workflow_agents` | List agents with system prompts, session counts, last 10 sessions |
+| `get_workflow_sessions` | Query sessions with filters (agent_id, status) and pagination |
+| `get_session_events` | Get events in a session with type filtering and pagination |
 
 ### IDE Connection Tools
 | Tool | Description |

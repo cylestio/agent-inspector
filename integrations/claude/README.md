@@ -37,6 +37,7 @@ agent-inspector anthropic
 | `/gate` | Check production deployment readiness |
 | `/report` | Generate security compliance report |
 | `/status` | Check dynamic analysis session availability |
+| `/debug` | Debug workflow - explore agents, sessions, events |
 
 ## Workflow
 

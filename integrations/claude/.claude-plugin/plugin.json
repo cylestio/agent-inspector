@@ -1,6 +1,6 @@
 {
   "name": "agent-inspector",
-  "version": "1.0.7",
+  "version": "1.2.0",
   "description": "AI Agent Security Analysis - scan, fix, analyze, and report on AI agent vulnerabilities using OWASP LLM Top 10",
   "author": {
     "name": "Cylestio",

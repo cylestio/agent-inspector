@@ -26,6 +26,55 @@ Or run directly with `uvx`:
 uvx agent-inspector
 ```
 
+## IDE Setup
+
+### Claude Code
+
+Register the Cylestio marketplace:
+
+```
+/plugin marketplace add cylestio/agent-inspector
+```
+
+Then install the plugin:
+
+```
+/plugin install agent-inspector@cylestio
+```
+
+After installation, restart Claude Code for the MCP connection to activate.
+
+### Cursor
+
+Copy this command to Cursor and it will set everything up for you:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/cylestio/agent-inspector/refs/heads/main/integrations/AGENT_INSPECTOR_SETUP.md
+```
+
+After setup, restart Cursor and approve the MCP server when prompted.
+
+### Manual (Dynamic Analysis Only)
+
+If you just want runtime tracing without the full IDE integration:
+
+```bash
+# Start the server
+agent-inspector anthropic   # or: openai
+```
+
+Point your agent to the proxy:
+
+```python
+# OpenAI
+client = OpenAI(base_url="http://localhost:4000/v1")
+
+# Anthropic
+client = Anthropic(base_url="http://localhost:4000")
+```
+
+Open http://localhost:7100 to view the live dashboard.
+
 ## Quick Start
 
 Launch Agent Inspector for your provider:
@@ -44,37 +93,18 @@ This starts:
 
 Point your AI application to `http://localhost:4000` and start monitoring immediately.
 
-## Usage
-
-### Basic Commands
-
-```bash
-# Launch with default settings
-agent-inspector openai
-
-# Override ports
-agent-inspector openai --port 8000 --trace-port 9090
-
-# View bundled configurations
-agent-inspector --show-configs
-
-# Get help
-agent-inspector --help
-```
-
-### Configuration
-
-Agent Inspector comes with preconfigured profiles for OpenAI and Anthropic. Each profile includes:
-- Local proxy settings
-- Streaming trace interceptor for real-time analytics
-- Sensible logging defaults
-
 ## Features
 
+### Security Scanning & Fixes
+- Scan your agent code for OWASP LLM Top 10 vulnerabilities
+- Get AI-powered, context-aware fixes for security issues
+- Track remediation progress with recommendation lifecycle
+- Check production deployment readiness with gate status
+
 ### Live Tracing & Debugging
-- Streaming live trace of sessions, tool executions, and messages for instant debugging
+- Stream live traces of sessions, tool executions, and messages
 - Real-time token usage and duration tracking
-- Tool usage monitoring
+- Debug agent sessions with full event replay and timeline
 - Health badges and status indicators
 
 ### Risk Analytics
@@ -89,10 +119,17 @@ Evaluate agent risk across four categories:
 - Confidence scoring on each finding
 - Session-level and aggregate reporting
 
-### Session Intelligence
-- Step-by-step timeline of model calls and tool executions
-- Behavioral pattern analysis and outlier detection
-- Deep drill-downs for rapid debugging and triage
+### Dynamic Runtime Analysis
+- Analyze runtime behavior and detect anomalies
+- Cross-reference static findings with runtime evidence
+- Identify validated issues vs theoretical risks
+- Track behavioral patterns and outliers
+
+### Compliance & Reporting
+- Generate compliance reports for stakeholders (CISO, executive, customer DD)
+- OWASP LLM Top 10 coverage tracking
+- SOC2 compliance mapping
+- Audit trail for all security fixes
 
 ## Dependencies
 

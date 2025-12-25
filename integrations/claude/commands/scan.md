@@ -142,10 +142,12 @@ complete_analysis_session(session_id)
 
 ### 8. Report Summary
 
+Format example
+
 ```
 AI Security Scan Complete!
 
-Scanned: 15 files
+Scanned: X files
 
 Security Checks (7):
 X PROMPT Security: 2 Critical issues
