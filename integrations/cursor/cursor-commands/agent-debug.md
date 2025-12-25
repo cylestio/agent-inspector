@@ -18,6 +18,7 @@ Use this command when:
 | `get_workflow_agents` | List agents with system prompts, session counts |
 | `get_workflow_sessions` | Query sessions with filters and pagination |
 | `get_session_events` | Get events within a session |
+| `get_event` | Get complete details for a single event by ID |
 
 ## Instructions
 
@@ -47,7 +48,15 @@ get_session_events(session_id, limit=50, offset=0, event_types?)
 
 Event types: `llm.call.start`, `llm.call.complete`, `tool.execution`, `tool.error`, `pii.detected`, etc.
 
-### 4. Report Findings
+### 4. Get Full Event Details
+
+```
+get_event(session_id, event_id)
+```
+
+Use after identifying an interesting event to retrieve complete data including all attributes, full request/response payloads, and detailed metadata.
+
+### 5. Report Findings
 
 ```
 Debug Summary: {workflow_id}

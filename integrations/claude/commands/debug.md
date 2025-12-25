@@ -35,6 +35,7 @@ Use `/debug` when:
 | `get_workflow_agents` | List all agents with their system prompts, session counts, and last activity |
 | `get_workflow_sessions` | Query sessions with filters (agent, status) and pagination |
 | `get_session_events` | Get detailed events within a session with type filtering |
+| `get_event` | Get complete details for a single event by ID |
 
 ## Debug Workflow
 
@@ -175,9 +176,45 @@ Issues Found:
 
 To filter: "show only tool events" or "show errors"
 To see more: "next 50 events"
+To get full details: "show event {event_id}"
 ```
 
-### 5. Report Debug Summary
+### 5. Get Full Event Details
+
+```
+get_event(
+  session_id,
+  event_id
+)
+```
+
+Use after identifying an interesting event in `get_session_events` to retrieve complete event data including all attributes.
+
+**Report to user:**
+```
+Event Details: {event_id}
+
+Session: {session_id}
+Type: {event_type}
+Time: {timestamp}
+
+Attributes:
+- model: gpt-4
+- tokens_in: 1234
+- tokens_out: 567
+- duration_ms: 1250
+- ...
+
+Request:
+{full request payload}
+
+Response:
+{full response payload}
+
+Navigate: "back to session events" or "next event"
+```
+
+### 6. Report Debug Summary
 
 After investigation, summarize findings:
 
@@ -270,11 +307,14 @@ get_session_events("sess_abc123", limit=100)
 
 // Then filter as needed
 get_session_events("sess_abc123", event_types=["llm.call.start", "llm.call.complete"])
+
+// Get full details for a specific event
+get_event("sess_abc123", "evt_xyz789")
 ```
 
 ## Pagination
 
-All three tools support pagination:
+The listing tools (`get_workflow_sessions`, `get_session_events`) support pagination:
 
 ```
 // First page
