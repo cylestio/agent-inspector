@@ -22,8 +22,9 @@ Slash commands are installed in `.cursor/commands/`. They invoke Agent Inspector
 | `/agent-gate` | Check production gate status |
 | `/agent-report` | Generate compliance report |
 | `/agent-status` | Check dynamic analysis status |
+| `/agent-debug` | Debug workflow - explore agents, sessions, events |
 
-## Available MCP Tools (17 total)
+## Available MCP Tools (20 total)
 
 ### Analysis Tools
 | Tool | Description |
@@ -53,6 +54,13 @@ Slash commands are installed in `.cursor/commands/`. They invoke Agent Inspector
 |------|-------------|
 | `get_agents` | List agents (filter by agent_workflow_id or "unlinked") |
 | `update_agent_info` | Link agents to agent workflows, set display names |
+
+### Workflow Query Tools
+| Tool | Description |
+|------|-------------|
+| `get_workflow_agents` | List agents with system prompts, session counts, last 10 sessions |
+| `get_workflow_sessions` | Query sessions with filters (agent_id, status) and pagination |
+| `get_session_events` | Get events in a session with type filtering and pagination |
 
 ### IDE Connection Tools
 | Tool | Description |
@@ -861,6 +869,68 @@ AI: Here's your executive summary:
 
 ---
 *Cylestio Agent Inspector*
+```
+
+## /agent-debug Command
+
+When user types "/agent-debug" or asks to debug, investigate, or explore agent sessions:
+
+### Purpose
+Explore captured workflow data to debug issues, investigate behavioral patterns, and identify problems in agent execution.
+
+### Debug Workflow
+
+1. **Get workflow overview**:
+   ```
+   get_workflow_agents(workflow_id, include_system_prompts=true)
+   ```
+   Returns all agents with system prompts, session counts, and last 10 sessions.
+
+2. **Query sessions**:
+   ```
+   get_workflow_sessions(workflow_id, agent_id?, status?, limit=20, offset=0)
+   ```
+   Filter by agent_id, status (ACTIVE/INACTIVE/COMPLETED), with pagination.
+
+3. **Drill into events**:
+   ```
+   get_session_events(session_id, limit=50, offset=0, event_types?)
+   ```
+   Event types: `llm.call.start`, `llm.call.complete`, `tool.execution`, `tool.error`, `pii.detected`, etc.
+
+4. **Report findings**:
+   ```
+   Debug Summary: {workflow_id}
+
+   Investigation Scope:
+   - Agents examined: N
+   - Sessions reviewed: N
+   - Events analyzed: N
+
+   Findings:
+   ERRORS (N): [list with session/event references]
+   PII EXPOSURE (N): [list PII detections]
+   BEHAVIORAL CONCERNS (N): [list anomalies]
+
+   View in dashboard: http://localhost:7100/agent-workflow/{id}/sessions
+   ```
+
+### Common Scenarios
+
+**Find errors:**
+```
+get_workflow_sessions(workflow_id, status="COMPLETED")
+get_session_events(session_id, event_types=["error", "tool.error", "llm.call.error"])
+```
+
+**Check for PII:**
+```
+get_session_events(session_id, event_types=["pii.detected"])
+```
+
+**Analyze tool usage:**
+```
+get_session_events(session_id, event_types=["tool.execution"])
 ```
 
 ## Key Rules
