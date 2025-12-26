@@ -1,5 +1,5 @@
 ---
-description: Debug AI agent workflows by exploring agents, sessions, and events. Investigate behavioral issues, errors, PII exposure, and unexpected patterns. Use when user asks to debug, explore sessions, investigate issues, or examine agent behavior at runtime.
+description: Debug AI agent workflows by exploring agents, sessions, and events. Investigate behavioral issues and unexpected patterns. Use when user asks to debug, explore sessions, investigate issues, or examine agent behavior at runtime.
 ---
 
 # Debug Agent Workflow
@@ -22,11 +22,9 @@ This is NOT optional. The setup command will:
 
 Use `/debug` when:
 - Investigating why an agent behaved unexpectedly
-- Looking for errors or failures in agent sessions
-- Checking for PII exposure in agent interactions
 - Analyzing patterns across multiple sessions
 - Debugging tool execution issues
-- Tracing through a specific problematic session
+- Tracing through a specific session
 
 ## Workflow Query Tools
 
@@ -111,13 +109,12 @@ Sessions for {agent_name or workflow_id}:
 
 Showing {N} sessions (page {page}):
 
-| Session ID | Status | Started | Duration | Events | Errors |
-|------------|--------|---------|----------|--------|--------|
-| sess_abc123 | COMPLETED | Dec 15, 2:30pm | 45s | 47 | 0 |
-| sess_def456 | COMPLETED | Dec 15, 2:15pm | 2m 30s | 128 | 2 |
-| sess_ghi789 | ACTIVE | Dec 15, 3:00pm | ongoing | 23 | 0 |
+| Session ID | Status | Started | Duration | Events |
+|------------|--------|---------|----------|--------|
+| sess_abc123 | COMPLETED | Dec 15, 2:30pm | 45s | 47 |
+| sess_def456 | COMPLETED | Dec 15, 2:15pm | 2m 30s | 128 |
+| sess_ghi789 | ACTIVE | Dec 15, 3:00pm | ongoing | 23 |
 
-Sessions with errors: 1
 Sessions currently active: 1
 
 To investigate a session: "show events for sess_def456"
@@ -135,19 +132,13 @@ get_session_events(
 )
 ```
 
-**Common Event Types:**
+**Event Types:**
 | Type | Description |
 |------|-------------|
 | `llm.call.start` | LLM API call initiated |
-| `llm.call.complete` | LLM response received |
-| `llm.call.error` | LLM call failed |
+| `llm.call.finish` | LLM response received |
 | `tool.execution` | Tool/function called |
 | `tool.result` | Tool returned result |
-| `tool.error` | Tool execution failed |
-| `user.input` | User message received |
-| `agent.response` | Agent response sent |
-| `pii.detected` | PII found in content |
-| `error` | General error event |
 
 **Report to user:**
 ```
@@ -161,20 +152,14 @@ Total Events: 128
 Timeline:
 | # | Time | Type | Summary |
 |---|------|------|---------|
-| 1 | 0s | user.input | "I need to cancel my booking" |
-| 2 | 0.1s | llm.call.start | gpt-4 (tokens: 1.2k) |
-| 3 | 1.2s | llm.call.complete | Response received |
-| 4 | 1.3s | tool.execution | lookup_booking(user_id="123") |
-| 5 | 1.5s | tool.result | Found booking #456 |
-| 6 | 1.6s | pii.detected | Email in tool result |
+| 1 | 0.1s | llm.call.start | gpt-4 (tokens: 1.2k) |
+| 2 | 1.2s | llm.call.finish | Response received |
+| 3 | 1.3s | tool.execution | lookup_booking(user_id="123") |
+| 4 | 1.5s | tool.result | Found booking #456 |
 ...
-| 47 | 45s | agent.response | "Your booking has been cancelled" |
+| 47 | 45s | llm.call.finish | Final response
 
-Issues Found:
-- Event #6: PII detected - email address exposed
-- Event #23: tool.error - database timeout
-
-To filter: "show only tool events" or "show errors"
+To filter: "show only tool events"
 To see more: "next 50 events"
 To get full details: "show event {event_id}"
 ```
@@ -228,61 +213,35 @@ Investigation Scope:
 
 Findings:
 
-ERRORS (3):
-1. sess_def456, event #23: Database timeout in lookup_booking
-2. sess_xyz789, event #45: LLM rate limit exceeded
-3. sess_xyz789, event #46: Retry failed
-
-PII EXPOSURE (2):
-1. sess_def456, event #6: Email address in tool result
-2. sess_abc123, event #12: Phone number in user input
-
 BEHAVIORAL CONCERNS (1):
 1. sess_xyz789: 47 tool calls in single session (unusually high)
 
 Recommendations:
-- Add database connection pooling to prevent timeouts
-- Implement PII redaction before logging tool results
 - Add tool call limits per session
 
 Related Commands:
-- Fix PII issue: /agent-inspector:fix REC-XXX
 - Run full scan: /agent-inspector:scan
 - View in dashboard: http://localhost:7100/agent-workflow/{id}/sessions
 ```
 
 ## Common Debug Scenarios
 
-### Scenario 1: Finding Errors
+### Scenario 1: Session Overview
 
-User: "debug why my agent is failing"
+User: "show me recent agent sessions"
 
 ```
 // 1. Get overview
 get_workflow_agents(workflow_id)
 
-// 2. Find sessions with errors
+// 2. List recent sessions
 get_workflow_sessions(workflow_id, status="COMPLETED", limit=20)
 
-// 3. For sessions with errors, drill in
-get_session_events(session_id, event_types=["error", "llm.call.error", "tool.error"])
+// 3. Drill into a session
+get_session_events(session_id)
 ```
 
-### Scenario 2: PII Investigation
-
-User: "check for PII in my agent sessions"
-
-```
-// 1. Get all sessions
-get_workflow_sessions(workflow_id, limit=50)
-
-// 2. For each session, check for PII events
-get_session_events(session_id, event_types=["pii.detected"])
-
-// 3. Report all PII occurrences with context
-```
-
-### Scenario 3: Behavioral Analysis
+### Scenario 2: Behavioral Analysis
 
 User: "why is my agent making so many tool calls"
 
@@ -297,7 +256,7 @@ get_workflow_sessions(workflow_id, limit=50)
 get_session_events(session_id, event_types=["tool.execution"])
 ```
 
-### Scenario 4: Specific Session Deep-Dive
+### Scenario 3: Specific Session Deep-Dive
 
 User: "show me what happened in session sess_abc123"
 
@@ -306,7 +265,7 @@ User: "show me what happened in session sess_abc123"
 get_session_events("sess_abc123", limit=100)
 
 // Then filter as needed
-get_session_events("sess_abc123", event_types=["llm.call.start", "llm.call.complete"])
+get_session_events("sess_abc123", event_types=["llm.call.start", "llm.call.finish"])
 
 // Get full details for a specific event
 get_event("sess_abc123", "evt_xyz789")
