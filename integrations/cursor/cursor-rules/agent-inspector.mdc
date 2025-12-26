@@ -896,7 +896,7 @@ Explore captured workflow data to debug issues, investigate behavioral patterns,
    ```
    get_session_events(session_id, limit=50, offset=0, event_types?)
    ```
-   Event types: `llm.call.start`, `llm.call.complete`, `tool.execution`, `tool.error`, `pii.detected`, etc.
+   Event types: `llm.call.start`, `llm.call.finish`, `tool.execution`, `tool.result`
 
 4. **Report findings**:
    ```
@@ -908,8 +908,6 @@ Explore captured workflow data to debug issues, investigate behavioral patterns,
    - Events analyzed: N
 
    Findings:
-   ERRORS (N): [list with session/event references]
-   PII EXPOSURE (N): [list PII detections]
    BEHAVIORAL CONCERNS (N): [list anomalies]
 
    View in dashboard: http://localhost:7100/agent-workflow/{id}/sessions
@@ -917,20 +915,20 @@ Explore captured workflow data to debug issues, investigate behavioral patterns,
 
 ### Common Scenarios
 
-**Find errors:**
+**List recent sessions:**
 ```
 get_workflow_sessions(workflow_id, status="COMPLETED")
-get_session_events(session_id, event_types=["error", "tool.error", "llm.call.error"])
-```
-
-**Check for PII:**
-```
-get_session_events(session_id, event_types=["pii.detected"])
+get_session_events(session_id)
 ```
 
 **Analyze tool usage:**
 ```
-get_session_events(session_id, event_types=["tool.execution"])
+get_session_events(session_id, event_types=["tool.execution", "tool.result"])
+```
+
+**Filter LLM calls:**
+```
+get_session_events(session_id, event_types=["llm.call.start", "llm.call.finish"])
 ```
 
 ## Key Rules
