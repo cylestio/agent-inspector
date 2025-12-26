@@ -6,10 +6,9 @@ Explore captured workflow data to debug issues, investigate behavioral patterns,
 
 Use this command when:
 - Investigating why an agent behaved unexpectedly
-- Looking for errors or failures in agent sessions
-- Checking for PII exposure in agent interactions
 - Analyzing patterns across multiple sessions
 - Debugging tool execution issues
+- Tracing through a specific session
 
 ## MCP Tools
 
@@ -46,7 +45,7 @@ Filter by:
 get_session_events(session_id, limit=50, offset=0, event_types?)
 ```
 
-Event types: `llm.call.start`, `llm.call.complete`, `tool.execution`, `tool.error`, `pii.detected`, etc.
+Event types: `llm.call.start`, `llm.call.finish`, `tool.execution`, `tool.result`
 
 ### 4. Get Full Event Details
 
@@ -67,8 +66,6 @@ Investigation Scope:
 - Events analyzed: N
 
 Findings:
-ERRORS (N): [list errors with session/event references]
-PII EXPOSURE (N): [list PII detections]
 BEHAVIORAL CONCERNS (N): [list anomalies]
 
 View in dashboard: http://localhost:7100/agent-workflow/{id}/sessions
@@ -76,20 +73,20 @@ View in dashboard: http://localhost:7100/agent-workflow/{id}/sessions
 
 ## Common Scenarios
 
-**Find errors:**
+**List recent sessions:**
 ```
 get_workflow_sessions(workflow_id, status="COMPLETED")
-get_session_events(session_id, event_types=["error", "tool.error", "llm.call.error"])
-```
-
-**Check for PII:**
-```
-get_session_events(session_id, event_types=["pii.detected"])
+get_session_events(session_id)
 ```
 
 **Analyze tool usage:**
 ```
-get_session_events(session_id, event_types=["tool.execution"])
+get_session_events(session_id, event_types=["tool.execution", "tool.result"])
+```
+
+**Filter LLM calls:**
+```
+get_session_events(session_id, event_types=["llm.call.start", "llm.call.finish"])
 ```
 
 ## Prerequisites
