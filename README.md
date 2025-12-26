@@ -59,11 +59,13 @@ Point your agent to the proxy:
 
 ```python
 # OpenAI
-client = OpenAI(base_url="http://localhost:4000/v1")
+client = OpenAI(base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}")
 
 # Anthropic
-client = Anthropic(base_url="http://localhost:4000")
+client = Anthropic(base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}")
 ```
+
+Replace `AGENT_WORKFLOW_ID` with your project identifier (e.g., derived from your git repo name, package name, or folder name).
 
 Open http://localhost:7100 to view the live dashboard.
 
