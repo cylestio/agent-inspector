@@ -4,63 +4,73 @@ Get the current status of dynamic analysis including available sessions, analysi
 
 ## Instructions
 
-1. **Get dynamic analysis status**:
-   ```
-   get_dynamic_analysis_status(workflow_id)
-   ```
+### Step 0: Derive agent_workflow_id
 
-2. **Report the status**:
+**DO NOT ask the user.** Auto-derive from (priority order):
+1. Git remote → repo name (e.g., `github.com/acme/my-agent.git` → `my-agent`)
+2. Package name → from `pyproject.toml` or `package.json`
+3. Folder name → last path segment
 
-### If sessions available:
+Use the **same `agent_workflow_id`** for ALL commands (scan, analyze, correlate, etc.) to ensure unified results.
+
+### Step 1: Get Status
+
 ```
-📊 Dynamic Analysis Status: {workflow_id}
+get_dynamic_analysis_status(agent_workflow_id)
+```
+
+### Step 2: Report Status
+
+**If sessions available:**
+```
+📊 Dynamic Analysis Status: {agent_workflow_id}
 
 Sessions Available: X unanalyzed sessions
 Last Analysis: {date} or "Never"
 Analysis State: READY / NOT_READY
 
 {If READY}
-Ready to analyze! Run /analyze to process X new sessions.
+Ready to analyze! Run /agent-analyze to process X new sessions.
 
 {If NOT_READY}
 No new sessions since last analysis.
 To capture sessions, route agent traffic through proxy:
-  base_url="http://localhost:4000/agent-workflow/{workflow_id}"
+  base_url="http://localhost:4000/agent-workflow/{agent_workflow_id}"
 
-View sessions: http://localhost:7100/agent-workflow/{id}/sessions
+View sessions: http://localhost:7100/agent-workflow/{agent_workflow_id}/sessions
 ```
 
-### If no sessions:
+**If no sessions:**
 ```
-📊 Dynamic Analysis Status: {workflow_id}
+📊 Dynamic Analysis Status: {agent_workflow_id}
 
 Sessions Available: 0
 Analysis State: NO_DATA
 
-To capture runtime sessions, configure your agent:
+To capture runtime sessions, configure your agent with the SAME agent_workflow_id:
 
 # OpenAI
 client = OpenAI(
-    base_url=f"http://localhost:4000/agent-workflow/{workflow_id}"
+    base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}"
 )
 
 # Anthropic
 client = Anthropic(
-    base_url=f"http://localhost:4000/agent-workflow/{workflow_id}"
+    base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}"
 )
 
-Then run your agent to generate sessions, and use /analyze.
+Then run your agent to generate sessions, and use /agent-analyze.
 ```
 
 ## Additional Information
 
 Also check:
-- `get_agent_workflow_state(workflow_id)` - Overall workflow state (STATIC_ONLY, DYNAMIC_ONLY, COMPLETE, NO_DATA)
-- `get_analysis_history(workflow_id)` - Past analysis runs
+- `get_agent_workflow_state(agent_workflow_id)` - Overall workflow state (STATIC_ONLY, DYNAMIC_ONLY, COMPLETE, NO_DATA)
+- `get_analysis_history(agent_workflow_id)` - Past analysis runs
 
 ## Next Steps
 
-- If sessions available: Run `/analyze` to process them
-- If no sessions: Configure agent to route through proxy, run agent, then `/analyze`
-- After analysis: Run `/correlate` to cross-reference with static findings
+- If sessions available: Run `/agent-analyze` to process them
+- If no sessions: Configure agent to route through proxy, run agent, then `/agent-analyze`
+- After analysis: Run `/agent-correlate` to cross-reference with static findings
 

@@ -230,7 +230,7 @@ You are smarter than any static analysis tool. You can:
 
 1. Create analysis session:
    ```
-   create_analysis_session(workflow_id, session_type="STATIC")
+   create_analysis_session(agent_workflow_id, session_type="STATIC")
    ```
 
 2. Get security patterns for reference (but don't limit yourself to them):
@@ -465,7 +465,7 @@ Before completing a fix, verify:
 ### Without ID: `/agent-fix`
 1. Get open recommendations:
    ```
-   get_recommendations(workflow_id, status="PENDING", blocking_only=true)
+   get_recommendations(agent_workflow_id, status="PENDING", blocking_only=true)
    ```
 2. Pick highest priority (CRITICAL > HIGH)
 3. Follow fix flow above
@@ -614,7 +614,7 @@ Check if the workflow is ready for production deployment. The gate is BLOCKED wh
 
 1. **Get gate status**:
    ```
-   get_gate_status(workflow_id)
+   get_gate_status(agent_workflow_id)
    ```
 
 2. **Report based on status**:
@@ -635,7 +635,7 @@ Check if the workflow is ready for production deployment. The gate is BLOCKED wh
    
    Once fixed, the gate will automatically unlock.
    
-   View in UI: http://localhost:7100/agent-workflow/{workflow_id}/recommendations
+   View in UI: http://localhost:7100/agent-workflow/{agent_workflow_id}/recommendations
    ```
    
    **If OPEN:**
@@ -652,7 +652,7 @@ Check if the workflow is ready for production deployment. The gate is BLOCKED wh
    - Dismissed: W
    
    Generate a compliance report: Open Reports page in UI
-   http://localhost:7100/agent-workflow/{workflow_id}/reports
+   http://localhost:7100/agent-workflow/{agent_workflow_id}/reports
    ```
 
 ### Gate Logic
@@ -725,13 +725,13 @@ Generate a comprehensive security assessment report in markdown format, delivere
 ### Report Workflow
 
 1. **Get the compliance report data**:
-   - Call the `/api/workflow/{workflow_id}/compliance-report` endpoint
+   - Call the `/api/workflow/{agent_workflow_id}/compliance-report` endpoint
    - Or use MCP tools to gather: `get_gate_status`, `get_findings`, `get_recommendations`
 
 2. **Generate markdown report** with these sections:
 
 ```markdown
-# Security Assessment: {workflow_id}
+# Security Assessment: {agent_workflow_id}
 
 **Generated:** {date}
 **Report Type:** Security Assessment
@@ -882,13 +882,13 @@ Explore captured workflow data to debug issues, investigate behavioral patterns,
 
 1. **Get workflow overview**:
    ```
-   get_workflow_agents(workflow_id, include_system_prompts=true)
+   get_workflow_agents(agent_workflow_id, include_system_prompts=true)
    ```
    Returns all agents with system prompts, session counts, and last 10 sessions.
 
 2. **Query sessions**:
    ```
-   get_workflow_sessions(workflow_id, agent_id?, status?, limit=20, offset=0)
+   get_workflow_sessions(agent_workflow_id, agent_id?, status?, limit=20, offset=0)
    ```
    Filter by agent_id, status (ACTIVE/INACTIVE/COMPLETED), with pagination.
 
@@ -900,7 +900,7 @@ Explore captured workflow data to debug issues, investigate behavioral patterns,
 
 4. **Report findings**:
    ```
-   Debug Summary: {workflow_id}
+   Debug Summary: {agent_workflow_id}
 
    Investigation Scope:
    - Agents examined: N
@@ -917,7 +917,7 @@ Explore captured workflow data to debug issues, investigate behavioral patterns,
 
 **List recent sessions:**
 ```
-get_workflow_sessions(workflow_id, status="COMPLETED")
+get_workflow_sessions(agent_workflow_id, status="COMPLETED")
 get_session_events(session_id)
 ```
 

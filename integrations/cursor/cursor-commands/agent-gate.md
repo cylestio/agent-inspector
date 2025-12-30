@@ -4,33 +4,43 @@ Check if your agent is ready for production deployment. The gate is BLOCKED when
 
 ## Instructions
 
-1. **Get gate status**:
-   ```
-   get_gate_status(workflow_id)
-   ```
+### Step 0: Derive agent_workflow_id
 
-2. **Report based on status**:
+**DO NOT ask the user.** Auto-derive from (priority order):
+1. Git remote → repo name (e.g., `github.com/acme/my-agent.git` → `my-agent`)
+2. Package name → from `pyproject.toml` or `package.json`
+3. Folder name → last path segment
 
-### If BLOCKED:
+Use the **same `agent_workflow_id`** for ALL commands (scan, analyze, correlate, etc.) to ensure unified results.
+
+### Step 1: Get Gate Status
+
+```
+get_gate_status(agent_workflow_id)
+```
+
+### Step 2: Report Based on Status
+
+**If BLOCKED:**
 ```
 🔒 Production Gate: BLOCKED
 
 Fix these issues to unlock production:
 
 1. REC-XXX (CRITICAL): [Title]
-   → /fix REC-XXX
+   → /agent-fix REC-XXX
 
 2. REC-YYY (HIGH): [Title]
-   → /fix REC-YYY
+   → /agent-fix REC-YYY
 
 Progress: ●○○ 0 of N fixed
 
 Once fixed, the gate will automatically unlock.
 
-View: http://localhost:7100/agent-workflow/{id}/recommendations
+View: http://localhost:7100/agent-workflow/{agent_workflow_id}/recommendations
 ```
 
-### If OPEN:
+**If OPEN:**
 ```
 ✅ Production Gate: OPEN
 
@@ -43,9 +53,9 @@ Security Summary:
 - Verified: Z
 - Dismissed: W
 
-Generate a report: /report
+Generate a report: /agent-report
 
-View: http://localhost:7100/agent-workflow/{id}/reports
+View: http://localhost:7100/agent-workflow/{agent_workflow_id}/reports
 ```
 
 ## Gate Logic
@@ -62,6 +72,6 @@ Gate is **OPEN** when all CRITICAL/HIGH recommendations are:
 
 ## Next Steps
 
-- If BLOCKED: Use `/fix` to address blocking issues
-- If OPEN: Use `/report` to generate a compliance report for stakeholders
+- If BLOCKED: Use `/agent-fix` to address blocking issues
+- If OPEN: Use `/agent-report` to generate a compliance report for stakeholders
 

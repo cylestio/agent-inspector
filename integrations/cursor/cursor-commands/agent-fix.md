@@ -4,7 +4,16 @@ Fix a specific security recommendation using AI-powered contextual fixes, or fix
 
 ## Instructions
 
-### With specific ID: `/fix REC-XXX`
+### Step 0: Derive agent_workflow_id
+
+**DO NOT ask the user.** Auto-derive from (priority order):
+1. Git remote → repo name (e.g., `github.com/acme/my-agent.git` → `my-agent`)
+2. Package name → from `pyproject.toml` or `package.json`
+3. Folder name → last path segment
+
+Use the **same `agent_workflow_id`** for ALL commands (scan, analyze, correlate, etc.) to ensure unified results.
+
+### With specific ID: `/agent-fix REC-XXX`
 
 1. **Get recommendation details**:
    ```
@@ -65,14 +74,14 @@ Fix a specific security recommendation using AI-powered contextual fixes, or fix
    
    **Files modified:** [list]
    
-   **Next step:** Run /scan to verify
+   **Next step:** Run /agent-scan to verify
    ```
 
-### Without ID: `/fix`
+### Without ID: `/agent-fix`
 
 1. Get open recommendations:
    ```
-   get_recommendations(workflow_id, status="PENDING", blocking_only=true)
+   get_recommendations(agent_workflow_id, status="PENDING", blocking_only=true)
    ```
 
 2. Pick highest priority (CRITICAL > HIGH > MEDIUM > LOW)
