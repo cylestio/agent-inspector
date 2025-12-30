@@ -65,10 +65,17 @@ def _show_configs() -> None:
 
 
 def _launch_perimeter(config_path: Path) -> None:
-    """Launch cylestio-perimeter via subprocess to avoid typer.Option() issues."""
+    """Launch cylestio-perimeter using Python module execution.
+
+    Uses sys.executable to ensure we run with the same Python interpreter,
+    which is critical for pipx installations where the cylestio-perimeter
+    CLI is not on the system PATH but is installed in the same venv.
+    """
+    import sys
+
     try:
         subprocess.run(
-            ["cylestio-perimeter", "run", "--config", str(config_path)],
+            [sys.executable, "-m", "src.main", "run", "--config", str(config_path)],
             check=True,
         )
     except subprocess.CalledProcessError as exc:
