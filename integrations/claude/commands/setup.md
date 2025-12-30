@@ -156,9 +156,21 @@ Wait for it to start:
 sleep 5
 ```
 
-### Step 6: Verify with MCP
+Verify the server is responding:
+```bash
+curl -s http://localhost:7100/health
+```
 
-Call the MCP tool again:
+**Expected response:** `{"status":"ok","service":"live_trace"}`
+
+If the health check fails, check the logs:
+```bash
+cat /tmp/agent-inspector.log
+```
+
+### Step 6: Verify MCP Connection
+
+After confirming the server is running via health check, verify MCP tools work:
 ```
 get_security_patterns()
 ```
@@ -315,7 +327,7 @@ Use the **same agent_workflow_id** for static and dynamic analysis to get unifie
 | Command not found | Re-install using: `uv tool install agent-inspector` or `pipx install agent-inspector` or `pip install agent-inspector` |
 | Module not found | Reinstall: `pip install --force-reinstall agent-inspector` or `pipx install agent-inspector --force` |
 | MCP tools unavailable | Reload Claude Code, verify server running |
-| Connection refused | Server not running - restart with `agent-inspector {provider}` |
+| Connection refused | Server not running - check with `curl -s http://localhost:7100/health`, restart with `agent-inspector {provider}` |
 | Port 7100 in use | Kill existing process: `lsof -ti:7100 \| xargs kill` |
 | Port 4000 in use | Kill existing process: `lsof -ti:4000 \| xargs kill` |
 | Permission denied | Check pip/python environment is activated |
