@@ -10,6 +10,5 @@
   "repository": "https://github.com/cylestio/agent-inspector",
   "license": "MIT",
   "keywords": ["security", "ai-agent", "owasp", "llm", "vulnerability", "sast", "dast"],
-  "commands": ["./commands/"],
-  "hooks": ["./hooks/hooks.json"]
+  "commands": ["./commands/"]
 }
