@@ -23,13 +23,13 @@ Agent Inspector is a thin CLI wrapper around cylestio-perimeter that provides re
 2. CLI loads the corresponding YAML config from `agent_inspector/configs/`
 3. Port overrides are applied if specified via `--port` or `--trace-port`
 4. Config is written to a temporary directory
-5. The perimeter server is launched by importing and calling `src.main.run()` from cylestio-perimeter
+5. The perimeter server is launched via `sys.executable -m src.main`
 6. Temporary directory is cleaned up on exit
 
 ### Key Design Decisions
 
 - **Temporary Config Files**: The CLI writes bundled configs to temp directories before launching perimeter to allow runtime overrides without modifying bundled assets
-- **Import-Based Launch**: Instead of subprocess, the CLI imports cylestio-perimeter's `src.main.run()` function directly at cli.py:176
+- **Module-Based Launch**: Uses `sys.executable -m src.main` to launch the server, ensuring it works in isolated environments like pipx/uvx where the cylestio-perimeter CLI is not on the system PATH
 - **Provider Enum**: Uses Python Enum for type-safe provider selection (cli.py:100-108)
 
 ## Development Commands
