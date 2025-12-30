@@ -12,20 +12,33 @@ Analyze runtime behavior of your agent across captured sessions to detect:
 
 ## Instructions
 
-1. **Check if analysis can be triggered**:
-   ```
-   get_dynamic_analysis_status(workflow_id)
-   ```
-   Verify there are unanalyzed sessions available.
+### Step 0: Derive agent_workflow_id
 
-2. **Trigger the analysis**:
-   ```
-   trigger_dynamic_analysis(workflow_id)
-   ```
+**DO NOT ask the user.** Auto-derive from (priority order):
+1. Git remote → repo name (e.g., `github.com/acme/my-agent.git` → `my-agent`)
+2. Package name → from `pyproject.toml` or `package.json`
+3. Folder name → last path segment
 
-3. **Wait for completion** - analysis processes only NEW sessions since last run
+Use the **same `agent_workflow_id`** for ALL commands (scan, analyze, correlate, etc.) to ensure unified results.
 
-4. **Report results**:
+### Step 1: Check Analysis Status
+
+```
+get_dynamic_analysis_status(agent_workflow_id)
+```
+Verify there are unanalyzed sessions available.
+
+### Step 2: Trigger Analysis
+
+```
+trigger_dynamic_analysis(agent_workflow_id)
+```
+
+### Step 3: Wait for Completion
+
+Analysis processes only NEW sessions since last run.
+
+### Step 4: Report Results
 ```
 🔬 Dynamic Analysis Complete!
 
@@ -52,26 +65,28 @@ Security Checks (4 categories):
 New Findings: N
 Gate Status: 🔒 BLOCKED / ✅ OPEN
 
-View: http://localhost:7100/agent-workflow/{id}/dynamic-analysis
+View: http://localhost:7100/agent-workflow/{agent_workflow_id}/dynamic-analysis
 
-Next: Run /correlate to cross-reference with static findings
+Next: Run /agent-correlate to cross-reference with static findings
 ```
 
 ## Prerequisites
 
-Your agent must be configured to route traffic through the proxy:
+Your agent must route traffic through the proxy using the **same `agent_workflow_id`** derived in Step 0:
 
 ```python
+# Use the SAME agent_workflow_id from Step 0
+
 # OpenAI
 client = OpenAI(
     api_key="...",
-    base_url=f"http://localhost:4000/agent-workflow/{WORKFLOW_ID}"
+    base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}"
 )
 
 # Anthropic
 client = Anthropic(
     api_key="...",
-    base_url=f"http://localhost:4000/agent-workflow/{WORKFLOW_ID}"
+    base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}"
 )
 ```
 
@@ -86,7 +101,7 @@ Run your agent normally - all LLM calls will be captured as sessions.
 
 ## Next Steps
 
-- After analysis: Run `/correlate` to cross-reference with static findings
-- If issues found: Run `/fix REC-XXX` to address them
-- Check gate: Run `/gate` to see production readiness
+- After analysis: Run `/agent-correlate` to cross-reference with static findings
+- If issues found: Run `/agent-fix REC-XXX` to address them
+- Check gate: Run `/agent-gate` to see production readiness
 

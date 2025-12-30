@@ -18,78 +18,94 @@ Connect static analysis findings with dynamic runtime data to understand:
 
 ## Instructions
 
-1. **Get workflow state**:
-   ```
-   get_agent_workflow_state(agent_workflow_id)
-   ```
-   Verify BOTH static AND dynamic data exist. If not, inform user what's missing.
+### Step 0: Derive agent_workflow_id
 
-2. **Get static findings**:
-   ```
-   get_findings(agent_workflow_id, status="OPEN")
-   ```
+**DO NOT ask the user.** Auto-derive from (priority order):
+1. Git remote → repo name (e.g., `github.com/acme/my-agent.git` → `my-agent`)
+2. Package name → from `pyproject.toml` or `package.json`
+3. Folder name → last path segment
 
-3. **Get tool usage from runtime**:
-   ```
-   get_tool_usage_summary(agent_workflow_id)
-   ```
+Use the **same `agent_workflow_id`** for ALL commands (scan, analyze, correlate, etc.) to ensure unified results.
 
-4. **Get correlation data**:
-   ```
-   get_agent_workflow_correlation(agent_workflow_id)
-   ```
+### Step 1: Get Workflow State
 
-5. **For each finding, determine correlation**:
-   
-   **Tool-related findings**: Check if tool was called at runtime
-   - Tool called → VALIDATED
-   - Tool never called → UNEXERCISED
-   
-   **Prompt findings**: Check if code path was exercised
-   - Function/route called at runtime → VALIDATED
-   - Never executed → UNEXERCISED
-   
-   **Secret/Data findings**: Check file usage at runtime
-   - File accessed but safe in practice → THEORETICAL
-   - Actively used → VALIDATED
+```
+get_agent_workflow_state(agent_workflow_id)
+```
 
-6. **Update each finding**:
-   ```
-   update_finding_correlation(finding_id, correlation_state="VALIDATED", 
-     correlation_evidence={
-       "tool_calls": 47,
-       "session_count": 15,
-       "runtime_observations": "Tool called 47 times across 15 sessions"
-     })
-   ```
+Verify BOTH static AND dynamic data exist. If not, inform user what's missing.
 
-7. **Report to user**:
-   ```
-   🔗 Correlation Complete!
-   
-   Cross-referenced X static findings with Y runtime sessions.
-   
-   🔴 VALIDATED (N) - Active risks confirmed at runtime:
-   - [Title]: [Evidence]
-   
-   📋 UNEXERCISED (N) - Static risks, never triggered:
-   - [Title]: [Evidence]
-   
-   💡 Prioritize fixing VALIDATED issues first - they're actively exploitable.
-   
-   To fix most critical: /fix REC-XXX
-   
-   View: http://localhost:7100/agent-workflow/{id}/static-analysis
-   ```
+### Step 2: Get Static Findings
+
+```
+get_findings(agent_workflow_id, status="OPEN")
+```
+
+### Step 3: Get Tool Usage from Runtime
+
+```
+get_tool_usage_summary(agent_workflow_id)
+```
+
+### Step 4: Get Correlation Data
+
+```
+get_agent_workflow_correlation(agent_workflow_id)
+```
+
+### Step 5: Determine Correlation for Each Finding
+
+**Tool-related findings**: Check if tool was called at runtime
+- Tool called → VALIDATED
+- Tool never called → UNEXERCISED
+
+**Prompt findings**: Check if code path was exercised
+- Function/route called at runtime → VALIDATED
+- Never executed → UNEXERCISED
+
+**Secret/Data findings**: Check file usage at runtime
+- File accessed but safe in practice → THEORETICAL
+- Actively used → VALIDATED
+
+### Step 6: Update Each Finding
+
+```
+update_finding_correlation(finding_id, correlation_state="VALIDATED",
+  correlation_evidence={
+    "tool_calls": 47,
+    "session_count": 15,
+    "runtime_observations": "Tool called 47 times across 15 sessions"
+  })
+```
+
+### Step 7: Report to User
+
+```
+🔗 Correlation Complete!
+
+Cross-referenced X static findings with Y runtime sessions.
+
+🔴 VALIDATED (N) - Active risks confirmed at runtime:
+- [Title]: [Evidence]
+
+📋 UNEXERCISED (N) - Static risks, never triggered:
+- [Title]: [Evidence]
+
+💡 Prioritize fixing VALIDATED issues first - they're actively exploitable.
+
+To fix most critical: /agent-fix REC-XXX
+
+View: http://localhost:7100/agent-workflow/{agent_workflow_id}/static-analysis
+```
 
 ## Prerequisites
 
-- Run `/scan` to get static analysis results
-- Route agent traffic through proxy to capture dynamic data:
+- Run `/agent-scan` to get static analysis results
+- Route agent traffic through proxy using the **same `agent_workflow_id`**:
   ```python
   # OpenAI
-  client = OpenAI(base_url=f"http://localhost:4000/agent-workflow/{WORKFLOW_ID}")
-  # Anthropic  
-  client = Anthropic(base_url=f"http://localhost:4000/agent-workflow/{WORKFLOW_ID}")
+  client = OpenAI(base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}")
+  # Anthropic
+  client = Anthropic(base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}")
   ```
 
