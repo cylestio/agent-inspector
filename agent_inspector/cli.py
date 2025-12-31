@@ -54,16 +54,6 @@ def _print_banner() -> None:
     )
 
 
-def _show_configs() -> None:
-    typer.echo(typer.style("Available configurations:\n", fg=typer.colors.GREEN, bold=True))
-    for provider in Provider:
-        typer.echo(typer.style(f"[{provider.value}]", fg=typer.colors.BRIGHT_BLUE, bold=True))
-        config_path = CONFIG_DIR / f"{provider.value}.yaml"
-        contents = config_path.read_text(encoding="utf-8")
-        typer.echo(contents.rstrip())
-        typer.echo("")
-
-
 def _launch_perimeter(config_path: Path) -> None:
     """Launch cylestio-perimeter using Python module execution.
 
@@ -98,7 +88,7 @@ def _cleanup_temp_dir(path: Path) -> None:
     shutil.rmtree(path, ignore_errors=True)
 
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 
 @app.command()
@@ -117,49 +107,48 @@ def _entrypoint(
         max=65535,
         help="Override the perimeter server listening port (defaults to 4000).",
     ),
-    live_trace_port: Optional[int] = typer.Option(
+    base_url: Optional[str] = typer.Option(
         None,
-        "--trace-port",
+        "--base-url",
+        help="Override the LLM provider base URL (e.g., http://localhost:8080 for local proxy).",
+    ),
+    ui_port: Optional[int] = typer.Option(
+        None,
+        "--ui-port",
         min=1,
         max=65535,
-        help="Override the Live Trace web server port (defaults to 7100).",
+        help="Override the UI dashboard port (defaults to 7100).",
     ),
     use_local_storage: bool = typer.Option(
         False,
         "--use-local-storage",
-        help="Enable local SQLite storage for live trace (default path: ./agent-inspector-trace.db).",
+        help="Enable persistent local SQLite storage for live trace (default path: ./agent-inspector-trace.db).",
     ),
     storage_db_path: Optional[str] = typer.Option(
         None,
         "--local-storage-path",
         help="Custom database path for local storage (requires --use-local-storage).",
     ),
-    show_configs: bool = typer.Option(
-        False,
-        "--show-configs",
-        help="Display the bundled configurations and exit.",
-    ),
 ) -> None:
     """Agent Inspector by Cylestio lets you debug, inspect, and evaluate agent behaviour and risk."""
-
-    if show_configs:
-        _show_configs()
-        raise typer.Exit()
 
     config = _load_config(provider)
 
     if port is not None:
         config.setdefault("server", {})["port"] = port
 
-    if live_trace_port is not None:
+    if base_url is not None:
+        config.setdefault("llm", {})["base_url"] = base_url
+
+    if ui_port is not None:
         interceptors = config.setdefault("interceptors", [])
         for interceptor in interceptors:
             if interceptor.get("type") == "live_trace":
-                interceptor.setdefault("config", {})["server_port"] = live_trace_port
+                interceptor.setdefault("config", {})["server_port"] = ui_port
                 break
         else:
             typer.secho(
-                "Live Trace interceptor not found in config; cannot override trace port.",
+                "Live Trace interceptor not found in config; cannot override UI port.",
                 fg=typer.colors.RED,
                 err=True,
             )
