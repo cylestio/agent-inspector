@@ -11,6 +11,8 @@ from typing import Any, Dict, Optional
 import typer
 import yaml
 
+from agent_inspector.defaults import PROVIDER_DEFAULTS
+
 BANNER = r"""
     _                    _     ___                           _             
    / \   __ _  ___ _ __ | |_  |_ _|_ __  ___ _ __   ___  ___| |_ ___  _ __ 
@@ -34,11 +36,19 @@ class Provider(str, Enum):
 
 
 def _load_config(provider: Provider) -> Dict[str, Any]:
-    config_path = CONFIG_DIR / f"{provider.value}.yaml"
+    config_path = CONFIG_DIR / "base.yaml"
     if not config_path.exists():
         raise FileNotFoundError(f"Missing bundled config: {config_path}")
     with config_path.open("r", encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
+        config = yaml.safe_load(handle)
+
+    # Inject provider-specific defaults
+    defaults = PROVIDER_DEFAULTS[provider.value]
+    config.setdefault("llm", {})
+    config["llm"]["base_url"] = defaults["base_url"]
+    config["llm"]["type"] = defaults["type"]
+
+    return config
 
 
 def _dump_config(config: Dict[str, Any], destination: Path) -> None:
@@ -52,16 +62,6 @@ def _print_banner() -> None:
         "Agent Inspector helps you debug, inspect, and evaluate agent behaviour and risk.",
         fg=typer.colors.MAGENTA,
     )
-
-
-def _show_configs() -> None:
-    typer.echo(typer.style("Available configurations:\n", fg=typer.colors.GREEN, bold=True))
-    for provider in Provider:
-        typer.echo(typer.style(f"[{provider.value}]", fg=typer.colors.BRIGHT_BLUE, bold=True))
-        config_path = CONFIG_DIR / f"{provider.value}.yaml"
-        contents = config_path.read_text(encoding="utf-8")
-        typer.echo(contents.rstrip())
-        typer.echo("")
 
 
 def _launch_perimeter(config_path: Path) -> None:
@@ -98,7 +98,7 @@ def _cleanup_temp_dir(path: Path) -> None:
     shutil.rmtree(path, ignore_errors=True)
 
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 
 @app.command()
@@ -117,49 +117,53 @@ def _entrypoint(
         max=65535,
         help="Override the perimeter server listening port (defaults to 4000).",
     ),
-    live_trace_port: Optional[int] = typer.Option(
+    base_url: Optional[str] = typer.Option(
         None,
-        "--trace-port",
+        "--base-url",
+        help="Override the LLM provider base URL (e.g., http://localhost:8080 for local proxy).",
+    ),
+    ui_port: Optional[int] = typer.Option(
+        None,
+        "--ui-port",
         min=1,
         max=65535,
-        help="Override the Live Trace web server port (defaults to 7100).",
+        help="Override the UI dashboard port (defaults to 7100).",
     ),
     use_local_storage: bool = typer.Option(
         False,
         "--use-local-storage",
-        help="Enable local SQLite storage for live trace (default path: ./agent-inspector-trace.db).",
+        help="Enable persistent local SQLite storage for live trace (default path: ./agent-inspector-trace.db).",
     ),
     storage_db_path: Optional[str] = typer.Option(
         None,
         "--local-storage-path",
         help="Custom database path for local storage (requires --use-local-storage).",
     ),
-    show_configs: bool = typer.Option(
-        False,
-        "--show-configs",
-        help="Display the bundled configurations and exit.",
+    log_level: Optional[str] = typer.Option(
+        None,
+        "--log-level",
+        help="Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).",
     ),
 ) -> None:
     """Agent Inspector by Cylestio lets you debug, inspect, and evaluate agent behaviour and risk."""
-
-    if show_configs:
-        _show_configs()
-        raise typer.Exit()
 
     config = _load_config(provider)
 
     if port is not None:
         config.setdefault("server", {})["port"] = port
 
-    if live_trace_port is not None:
+    if base_url is not None:
+        config.setdefault("llm", {})["base_url"] = base_url
+
+    if ui_port is not None:
         interceptors = config.setdefault("interceptors", [])
         for interceptor in interceptors:
             if interceptor.get("type") == "live_trace":
-                interceptor.setdefault("config", {})["server_port"] = live_trace_port
+                interceptor.setdefault("config", {})["server_port"] = ui_port
                 break
         else:
             typer.secho(
-                "Live Trace interceptor not found in config; cannot override trace port.",
+                "Live Trace interceptor not found in config; cannot override UI port.",
                 fg=typer.colors.RED,
                 err=True,
             )
@@ -180,6 +184,9 @@ def _entrypoint(
                 err=True,
             )
             raise typer.Exit(code=1)
+
+    if log_level is not None:
+        config.setdefault("logging", {})["level"] = log_level.upper()
 
     _print_banner()
     typer.secho(f"Agent Inspector loading the {provider.value} perimeter profile...", fg=typer.colors.GREEN)

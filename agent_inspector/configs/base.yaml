@@ -3,9 +3,7 @@ server:
   host: "127.0.0.1"
   workers: 1
 
-llm:
-  base_url: "https://api.anthropic.com"
-  type: "anthropic"
+# llm.base_url and llm.type set dynamically by CLI
 
 interceptors:
   - type: live_trace
