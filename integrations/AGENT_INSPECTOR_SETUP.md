@@ -1,6 +1,6 @@
 # Agent Inspector - Installation Guide for AI Assistants
 
-> **Purpose:** Complete guide for Cursor/Claude Code to install and configure Agent Inspector.
+> **Purpose:** Complete guide for Cursor IDE to install and configure Agent Inspector.
 > 
 > **Your job:** Execute EVERY step. Be smart. Handle edge cases. Succeed 100%.
 
@@ -36,6 +36,13 @@ Store this as `{AGENT_PROJECT_FOLDER}`.
 **Examples:**
 - Standalone agent: `/home/user/my-sales-bot/` → Agent Inspector analyzes "my-sales-bot"
 - Monorepo: `/home/user/company-ai/agents/support-bot/` → Agent Inspector analyzes "support-bot"
+
+> ⚠️ **CRITICAL: Open the agent project folder directly in Cursor!**
+>
+> Cursor only detects `.cursor/rules` and `.cursor/commands` at the **workspace root**. If you open a parent folder containing multiple projects, the `.cursor` directory inside subfolders will NOT be detected.
+>
+> ❌ **Wrong:** Open `/home/user/all-my-projects/` → `.cursor` in `my-agent/` subfolder is ignored
+> ✅ **Correct:** Open `/home/user/all-my-projects/my-agent/` directly
 
 ### 1.2 Check if Inside cylestio-perimeter Repo (Local Dev Mode)
 
@@ -92,22 +99,21 @@ pip install {RELATIVE_PATH_TO_REPO_ROOT}
 
 ---
 
-## STEP 3: DETECT YOUR IDE
+## STEP 3: VERIFY CURSOR VERSION
 
-Determine which IDE YOU are:
+**Requirement:** Cursor 1.6 or later is required for slash commands.
 
-| You Are | How to Know |
-|---------|-------------|
-| **Cursor** | You're an AI in Cursor IDE. Check: does `.cursor/` folder exist in workspace? |
-| **Claude Code** | You're Claude Code. Check: does `.claude/` folder exist in workspace? |
+> **Note:** Custom slash commands are a beta feature in Cursor. If commands don't appear, see Troubleshooting at the end of this guide.
 
-Store result as `{IDE_TYPE}`.
+Verify the user has Cursor 1.6+:
+- Help → About Cursor → Check version number
+- If older than 1.6, user must update Cursor first
 
 ---
 
 ## STEP 4: CONFIGURE MCP CONNECTION
 
-### 4.1 For Cursor: `.cursor/mcp.json`
+### Configure `.cursor/mcp.json`
 
 **First, check if file exists:**
 ```bash
@@ -148,17 +154,11 @@ Then write:
 }
 ```
 
-### 4.2 For Claude Code: `.mcp.json`
-
-Same logic as above, but:
-- File location: `{AGENT_PROJECT_FOLDER}/.mcp.json` (project root)
-- Use `"type": "http"` instead of `"streamable-http"`
-
 ---
 
-## STEP 5: CREATE RULES/SKILLS FILE
+## STEP 5: INSTALL CURSOR RULES FILE
 
-### 5.1 For Cursor: `.cursor/rules/agent-inspector.mdc`
+### Create `.cursor/rules/agent-inspector.mdc`
 
 ```bash
 mkdir -p {AGENT_PROJECT_FOLDER}/.cursor/rules
@@ -224,33 +224,13 @@ Recommendations follow: PENDING → FIXING → FIXED → VERIFIED
 Use MCP tools: `start_fix()`, `complete_fix()`, `dismiss_recommendation()`
 ```
 
-### 5.2 For Claude Code: `CLAUDE.md` (Skills File)
+---
 
-Claude Code uses a `CLAUDE.md` file at the project root for skills/context.
+## STEP 6: INSTALL SLASH COMMANDS (CRITICAL!)
 
-```bash
-# Check if CLAUDE.md exists
-ls {AGENT_PROJECT_FOLDER}/CLAUDE.md 2>/dev/null && echo "EXISTS" || echo "NOT_FOUND"
-```
+⚠️ **Without this step, `/agent-scan`, `/agent-fix`, etc. will NOT work!**
 
-**Copy from package template** if available:
-- Look for: `integrations/claude-code/CLAUDE.md` in the installed package or repo (if available)
-- Copy to: `{AGENT_PROJECT_FOLDER}/CLAUDE.md`
-
-**If NOT_FOUND and no template**, create `{AGENT_PROJECT_FOLDER}/CLAUDE.md` with:
-- MCP connection details (http://localhost:7100/mcp)
-- Commands: `/agent-scan`, `/agent-fix REC-XXX`, `/agent-fix`
-- 7 security categories
-- Recommendation lifecycle
-- MCP tools reference
-
-**If EXISTS**, append the Agent Inspector section if not already present.
-
-### 5.3 For Cursor ONLY: Install Slash Commands
-
-⚠️ **This step is for Cursor IDE only.** Claude Code does not support slash commands in the same way.
-
-Cursor supports custom slash commands via `.cursor/commands/` directory. These enable native `/agent-scan`, `/agent-fix`, `/agent-gate` etc. commands in the chat.
+Cursor 1.6+ supports custom slash commands via `.cursor/commands/` directory. These enable native `/agent-scan`, `/agent-fix`, `/agent-gate` etc. commands in the chat.
 
 **Create the commands directory:**
 ```bash
@@ -288,20 +268,16 @@ ls {AGENT_PROJECT_FOLDER}/.cursor/commands/
 - Selecting a command loads the markdown content as instructions for the AI
 - Commands reference Agent Inspector MCP tools automatically
 
-**For Claude Code:** Slash commands are NOT supported the same way. Claude Code users should use natural language like "run a security scan" or reference the rules in `CLAUDE.md`.
-
-### 5.4 Detailed Skills (Both IDEs)
+### Optional: Detailed Skills
 
 For more comprehensive skill files, check `integrations/skills/` (if available):
 - `static-analysis/SKILL.md` - Complete `/agent-scan` workflow
 - `auto-fix/SKILL.md` - Complete `/agent-fix` workflow with prioritization
 - `dynamic-analysis/SKILL.md` - Runtime tracing setup
 
-These can be included in your project's rules/skills for more detailed guidance.
-
 ---
 
-## STEP 6: UPDATE AGENT CODE TO USE PROXY
+## STEP 7: UPDATE AGENT CODE TO USE PROXY
 
 **Search for LLM client initialization:**
 ```bash
@@ -332,7 +308,7 @@ client = OpenAI(
 
 ---
 
-## STEP 7: START AGENT INSPECTOR SERVER
+## STEP 8: START AGENT INSPECTOR SERVER
 
 **Try to start it yourself** in a background terminal:
 
@@ -360,7 +336,7 @@ cylestio-perimeter run --config {PATH_TO_CONFIG} &
 
 ---
 
-## STEP 8: RELOAD IDE TO CONNECT MCP
+## STEP 9: RELOAD IDE TO CONNECT MCP
 
 **For Cursor - Multiple options:**
 
@@ -375,18 +351,14 @@ cylestio-perimeter run --config {PATH_TO_CONFIG} &
 > 
 > You should see 'agent-inspector' with 17 tools enabled."
 
-**For Claude Code:**
-
-> "Run `/mcp` to verify the connection. You should see 'agent-inspector' listed."
-
 ---
 
-## STEP 9: REGISTER IDE CONNECTION (AUTOMATIC)
+## STEP 10: REGISTER IDE CONNECTION (AUTOMATIC)
 
 ⚠️ **CRITICAL: This step MUST succeed. If it fails, retry on EVERY subsequent MCP tool call.**
 
 **When to register:**
-- ✅ Immediately after installation (during first scan - see STEP 10)
+- ✅ Immediately after installation (during first scan - see STEP 11)
 - ✅ Before every security analysis request (scan, analyze, fix, etc.) - auto-switches workflow
 - ✅ Registration is idempotent - safe to call every time
 
@@ -411,11 +383,11 @@ cylestio-perimeter run --config {PATH_TO_CONFIG} &
 
 ### 9.2 How to Register IDE Connection
 
-Registration happens automatically as part of every scan/analysis command (see STEP 10). Here's the pattern:
+Registration happens automatically as part of every scan/analysis command (see STEP 11). Here's the pattern:
 
 ```
 register_ide_connection(
-  ide_type="cursor",              // REQUIRED: "cursor" or "claude-code"
+  ide_type="cursor",              // REQUIRED: always "cursor"
   agent_workflow_id="my-agent",   // REQUIRED: from scan target folder name
   workspace_path="/path/to/project",  // REQUIRED: full workspace path
   model="claude-sonnet-4"         // REQUIRED: your AI model name
@@ -425,7 +397,7 @@ register_ide_connection(
 **Parameter values:**
 | Parameter | How to determine |
 |-----------|------------------|
-| `ide_type` | `"cursor"` if in Cursor IDE, `"claude-code"` if Claude Code CLI |
+| `ide_type` | Always `"cursor"` |
 | `agent_workflow_id` | **Scan target folder name**, NOT parent repo! (e.g., scanning `customer-support-agent/` → use `"customer-support-agent"`) |
 | `workspace_path` | Full path to the workspace you're editing |
 | `model` | Your AI model name (see table above) |
@@ -543,18 +515,18 @@ Your logic:
 
 ---
 
-## STEP 10: RUN FIRST STATIC SCAN
+## STEP 11: RUN FIRST STATIC SCAN
 
 **If there's agent code in the project, run a security scan immediately.**
 
-### 10.1 Check for Code
+### 11.1 Check for Code
 
 Look for Python/JS/TS files in the agent project:
 ```bash
 ls {AGENT_PROJECT_FOLDER}/*.py {AGENT_PROJECT_FOLDER}/*.js {AGENT_PROJECT_FOLDER}/*.ts 2>/dev/null | head -5
 ```
 
-### 10.2 If Code Exists, Run Static Scan
+### 11.2 If Code Exists, Run Static Scan
 
 If MCP is connected, use the `/agent-scan` command workflow:
 
@@ -619,17 +591,17 @@ If MCP not connected yet, tell user:
 
 ---
 
-## STEP 11: DISCOVER TOOLS & SHOW WELCOME
+## STEP 12: DISCOVER TOOLS & SHOW WELCOME
 
-### 11.1 Get Available Tools
+### 12.1 Get Available Tools
 
 Query the `agent-inspector` MCP server for available tools.
 
-### 11.2 Understand & Explain
+### 12.2 Understand & Explain
 
 **You're smart.** Read the tool names and descriptions. Figure out what's actually possible - don't assume features exist. Only mention capabilities you can verify from the tool list.
 
-### 11.3 Display Welcome Message
+### 12.3 Display Welcome Message
 
 ```
  ██████╗██╗   ██╗██╗     ███████╗███████╗████████╗██╗ ██████╗ 
@@ -662,8 +634,6 @@ Type `/agent-` in the chat to see all Agent Inspector commands. These are powere
 | `/agent-status` | Get dynamic analysis status (sessions available, etc.) |
 | `/agent-gate` | Check production gate status and blocking issues |
 | `/agent-report` | Generate security assessment report (as markdown) |
-
-> **Claude Code users:** These slash commands are Cursor-specific. Use natural language instead: "run a security scan", "fix recommendation REC-001", etc.
 
 #### The `/agent-fix` Command - AI-Powered Security Fixes
 
@@ -837,13 +807,12 @@ The rules file ensures I'll use these tools when you ask about security - even i
 ## CHECKLIST - VERIFY COMPLETION
 
 - [ ] Identified agent project folder
+- [ ] **Verified user opened project folder directly** (not a parent folder containing multiple projects)
 - [ ] Checked/created virtual environment
 - [ ] Ran `pip install` (saw success message)
-- [ ] Created/updated MCP config file (`.cursor/mcp.json` or `.mcp.json`)
-- [ ] Created rules/skills file:
-  - [ ] Cursor: `.cursor/rules/agent-inspector.mdc`
-  - [ ] Claude Code: `CLAUDE.md` with Agent Inspector section
-- [ ] **Cursor ONLY:** Installed slash commands in `.cursor/commands/`
+- [ ] Created/updated MCP config file (`.cursor/mcp.json`)
+- [ ] Created rules file: `.cursor/rules/agent-inspector.mdc`
+- [ ] **CRITICAL:** Installed slash commands in `.cursor/commands/`
   - [ ] Copied all `.md` files from `integrations/cursor/cursor-commands/`
   - [ ] Verified: agent-scan.md, agent-fix.md, agent-analyze.md, agent-correlate.md, agent-gate.md, agent-report.md, agent-status.md
 - [ ] Updated agent code with `base_url`
@@ -1034,3 +1003,5 @@ AI: Here's your security assessment report:
 | MCP tools unavailable | Reload IDE, verify server running |
 | Connection refused | Start the server |
 | Permission denied | Activate venv first |
+| Slash commands not appearing | 1. Verify Cursor 1.6+ (Help → About), 2. Check `.cursor/commands/*.md` files exist, 3. Reload Window (Cmd+Shift+P → "Developer: Reload Window"), 4. Slash commands are a beta feature |
+| Rules/commands not detected | Open the agent project folder **directly** in Cursor. Cursor only reads `.cursor/` from workspace root - subfolders are ignored |
