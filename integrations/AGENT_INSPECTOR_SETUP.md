@@ -311,6 +311,19 @@ For more comprehensive skill files, check `integrations/skills/` (if available):
 
 ## STEP 7: UPDATE AGENT CODE TO USE PROXY
 
+```
+╔════════════════════════════════════════════════════════════════════════╗
+║                                                                         ║
+║   🚨 CRITICAL: YOU MUST ACTUALLY EDIT THE CODE FILES!                  ║
+║                                                                         ║
+║   This step requires MODIFYING the agent's Python files.               ║
+║   Do NOT just mention the URL in documentation - EDIT THE FILES!       ║
+║                                                                         ║
+║   If you skip this step, runtime sessions will NOT be captured.        ║
+║                                                                         ║
+╚════════════════════════════════════════════════════════════════════════╝
+```
+
 ### 7.1 Determine the Workflow ID
 
 The workflow ID identifies your agent in Agent Inspector. Use the **project folder name** by default.
@@ -330,46 +343,81 @@ Examples:
 grep -rn "Anthropic\|OpenAI" {AGENT_PROJECT_FOLDER} --include="*.py" | head -20
 ```
 
-### 7.3 Update base_url with Workflow-Based URL (PREFERRED)
-
-**For each match, update or add `base_url` using the workflow format:**
-
+**You will find lines like:**
 ```python
-# Anthropic - use workflow-based URL:
-client = Anthropic(
-    api_key="...",
-    base_url="http://localhost:4000/agent-workflow/{WORKFLOW_ID}"
-)
+client = Anthropic(api_key=...)
+# or
+client = OpenAI(api_key=...)
+```
 
-# OpenAI - use workflow-based URL:
-client = OpenAI(
-    api_key="...",
-    base_url="http://localhost:4000/agent-workflow/{WORKFLOW_ID}/v1"
+### 7.3 EDIT THE FILES to Add base_url (REQUIRED!)
+
+⚠️ **YOU MUST USE YOUR FILE EDITING TOOLS TO MODIFY THESE FILES!**
+
+**For EACH file that creates an Anthropic or OpenAI client:**
+
+1. Open the file with your editor
+2. Find the client initialization
+3. ADD the `base_url` parameter
+4. SAVE the file
+
+**Before (what you'll find):**
+```python
+client = Anthropic(
+    api_key=os.environ.get("ANTHROPIC_API_KEY")
 )
 ```
 
-**Real examples:**
-
+**After (what you must change it to):**
 ```python
-# For a project named "my-sales-bot":
 client = Anthropic(
     api_key=os.environ.get("ANTHROPIC_API_KEY"),
-    base_url="http://localhost:4000/agent-workflow/my-sales-bot"
+    base_url="http://localhost:4000/agent-workflow/{WORKFLOW_ID}"
+)
+```
+
+**Real examples of ACTUAL EDITS you should make:**
+
+```python
+# For a project named "next-rooms":
+# BEFORE:
+client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+# AFTER (you must edit the file to look like this):
+client = Anthropic(
+    api_key=os.environ.get("ANTHROPIC_API_KEY"),
+    base_url="http://localhost:4000/agent-workflow/next-rooms"
 )
 
-# For a project named "customer-support-agent":
+# For OpenAI in a project named "customer-support-agent":
+# BEFORE:
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+# AFTER:
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
     base_url="http://localhost:4000/agent-workflow/customer-support-agent/v1"
 )
 ```
 
-### Why Workflow-Based URLs?
+### 7.4 Verify You Made the Edit
 
-| URL Type | Example | Benefit |
-|----------|---------|---------|
-| ❌ Basic | `http://localhost:4000` | Traffic not associated with workflow |
-| ✅ Workflow | `http://localhost:4000/agent-workflow/my-bot` | Traffic tracked per agent, appears in dashboard correctly |
+After editing, the file should contain `base_url="http://localhost:4000/agent-workflow/..."`.
+
+**Run this to verify:**
+```bash
+grep -rn "base_url.*localhost:4000" {AGENT_PROJECT_FOLDER} --include="*.py"
+```
+
+If this returns no results, you DID NOT edit the file correctly. Go back and edit it!
+
+### Why This Step Matters
+
+| If you... | Result |
+|-----------|--------|
+| ❌ Skip this step | Runtime sessions NOT captured, dynamic analysis won't work |
+| ❌ Only mention URL in docs | Agent still calls real API, sessions NOT captured |
+| ✅ Actually edit the code | All LLM calls routed through proxy, sessions captured ✓ |
 
 **The workflow-based URL ensures:**
 - All LLM calls are tracked under the correct agent workflow
@@ -377,13 +425,14 @@ client = OpenAI(
 - Dynamic analysis works correctly
 - Correlation between static findings and runtime data is accurate
 
-### 7.4 Check Existing base_url
+### 7.5 What If There's No Client Initialization?
 
-- If `base_url` already uses workflow format (`localhost:4000/agent-workflow/...`) → verify workflow ID is correct
-- If `base_url` uses basic format (`localhost:4000`) → UPDATE to workflow format
-- If `base_url` missing → ADD with workflow format
+If grep returns no results, ask the user where their LLM client is initialized, or check:
+- `main.py`, `app.py`, `agent.py`
+- Any file with "llm", "client", "api" in the name
+- Configuration files that might set the client
 
-**YOU MUST EDIT THE ACTUAL FILES** - use your file editing tools to make these changes.
+**DO NOT proceed without editing the agent code. Sessions will not be captured!**
 
 ---
 
@@ -855,9 +904,20 @@ If the server is running, you can verify MCP tools are available. But even if th
 
 ### 13.2 DISPLAY THIS EXACT ASCII BANNER
 
-⚠️ **COPY THIS EXACTLY - DO NOT CREATE YOUR OWN ASCII ART!**
+```
+╔════════════════════════════════════════════════════════════════════════╗
+║                                                                         ║
+║   🚨 STOP! READ THIS CAREFULLY!                                        ║
+║                                                                         ║
+║   You MUST copy the EXACT banner below. Do NOT generate your own.      ║
+║   The banner spells "CYLESTIO" (the company name).                     ║
+║                                                                         ║
+║   If you create your own ASCII art, YOU HAVE FAILED this step.         ║
+║                                                                         ║
+╚════════════════════════════════════════════════════════════════════════╝
+```
 
-The banner below spells "CYLESTIO" in block letters. Copy and paste it exactly as shown:
+**THE EXACT BANNER TO COPY (spells "CYLESTIO"):**
 
 ```
  ██████╗██╗   ██╗██╗     ███████╗███████╗████████╗██╗ ██████╗ 
@@ -869,15 +929,28 @@ The banner below spells "CYLESTIO" in block letters. Copy and paste it exactly a
                     AGENT INSPECTOR
 ```
 
-❌ **DO NOT:**
-- Create your own ASCII art
-- Use a different banner
-- Skip the banner
-- Make a simpler text version
+**VERIFICATION:** The banner above uses block characters (█) and spells C-Y-L-E-S-T-I-O.
 
-✅ **DO:** Copy the exact banner above character-for-character.
+❌ **WRONG - DO NOT DO THESE:**
+```
+# WRONG - This is NOT the correct banner:
+  _____ _       _     ...    (WRONG - different ASCII style)
+ / ____| |     | |   ...    (WRONG - not block characters)
+| |    | |_   _| |__ ...    (WRONG - this is something else)
+```
 
-**Then say:** "✅ Installation Complete! Thanks for using Cylestio Agent Inspector! 🛡️"
+✅ **CORRECT - Copy this EXACT text:**
+```
+ ██████╗██╗   ██╗██╗     ███████╗███████╗████████╗██╗ ██████╗ 
+██╔════╝╚██╗ ██╔╝██║     ██╔════╝██╔════╝╚══██╔══╝██║██╔═══██╗
+██║      ╚████╔╝ ██║     █████╗  ███████╗   ██║   ██║██║   ██║
+██║       ╚██╔╝  ██║     ██╔══╝  ╚════██║   ██║   ██║██║   ██║
+╚██████╗   ██║   ███████╗███████╗███████║   ██║   ██║╚██████╔╝
+ ╚═════╝   ╚═╝   ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚═╝ ╚═════╝ 
+                    AGENT INSPECTOR
+```
+
+**After the banner, say:** "✅ Installation Complete! Thanks for using Cylestio Agent Inspector! 🛡️"
 
 #### What is Agent Inspector?
 
@@ -1111,7 +1184,10 @@ Ask yourself:
 - [ ] Created/updated `.cursor/mcp.json` with agent-inspector config
 - [ ] Created `.cursor/rules/agent-inspector.mdc`
 - [ ] Copied slash commands to `.cursor/commands/` (7 files: agent-scan.md, agent-fix.md, agent-analyze.md, agent-correlate.md, agent-gate.md, agent-report.md, agent-status.md)
-- [ ] Updated agent code with `base_url` (if applicable)
+- [ ] ⚠️ **ACTUALLY EDITED agent code files** to add `base_url` parameter (Step 7)
+  - [ ] Found files with `Anthropic(` or `OpenAI(` client initialization
+  - [ ] Used file editing tools to ADD `base_url="http://localhost:4000/agent-workflow/{workflow-id}"`
+  - [ ] Verified edit with grep: `grep -rn "base_url.*localhost:4000" --include="*.py"`
 
 ### 🔴 MANDATORY: Server Startup (Step 8)
 - [ ] **Started Agent Inspector server** - one of these MUST be true:
@@ -1336,6 +1412,8 @@ AI: Here's your security assessment report:
 | Connection refused | Start the server (Step 8) |
 | Permission denied | Activate venv first |
 | `'serve' is not one of 'openai', 'anthropic'` | **WRONG COMMAND!** Use `agent-inspector anthropic` or `agent-inspector openai`. There is NO `serve` subcommand. |
+| Sessions not being captured / No runtime data | **Agent code not edited!** You must EDIT the Python files to add `base_url` parameter (Step 7). Run: `grep -rn "base_url.*localhost:4000" --include="*.py"` - if no results, the code was not edited! |
+| Dynamic analysis shows no sessions | Same as above - agent code must have `base_url="http://localhost:4000/agent-workflow/{id}"` |
 | Slash commands not appearing | 1. Verify Cursor 1.6+ (Help → About), 2. Check `.cursor/commands/*.md` files exist, 3. Reload Window (Cmd+Shift+P → "Developer: Reload Window"), 4. Slash commands are a beta feature |
 | Rules/commands not detected | Open the agent project folder **directly** in Cursor. Cursor only reads `.cursor/` from workspace root - subfolders are ignored |
 | Installation seems incomplete | Did you display the welcome message (Step 13)? It's mandatory! |
@@ -1348,7 +1426,8 @@ AI: Here's your security assessment report:
 3. **Not integrating auto-startup** - Consider adding Agent Inspector to startup scripts (Step 8.5) for better UX.
 4. **Using basic proxy URL instead of workflow URL** - Use `http://localhost:4000/agent-workflow/{name}` not just `http://localhost:4000`. The workflow URL ensures traffic is tracked correctly.
 5. **Using wrong server command** - The command is `agent-inspector anthropic` or `agent-inspector openai`. There is NO `serve`, `start`, or `run` subcommand!
-6. **Creating custom ASCII banner** - Copy the EXACT "CYLESTIO" banner from Step 13. Do NOT create your own ASCII art.
+6. **Creating custom ASCII banner** - Copy the EXACT "CYLESTIO" banner from Step 13 (uses █ block characters). Do NOT create your own ASCII art.
+7. **Not actually editing agent code files** - Step 7 requires you to EDIT the Python files that create LLM clients. Just mentioning the URL in documentation is NOT enough - you must actually modify the code!
 
 ### ⛔ FAILURE MODES - What BAD installations look like
 
@@ -1377,12 +1456,24 @@ AI: Here's your security assessment report:
 - ❌ Shows some random ASCII art instead of "CYLESTIO"
 - ❌ Looks unprofessional and inconsistent
 - **User thinks:** "Is this the right product?"
-- **FIX:** Copy the EXACT banner from Step 13.2
+- **FIX:** Copy the EXACT banner from Step 13.2 (uses █ block characters)
+
+**FAILED Installation #6:** Didn't actually edit agent code files
+- ❌ Mentioned `base_url` in documentation but didn't edit the actual Python files
+- ❌ Sessions are not captured, dynamic analysis doesn't work
+- **User thinks:** "Why isn't Agent Inspector seeing my agent's traffic?"
+- **FIX:** Actually EDIT the Python files to add `base_url` parameter (Step 7)
 
 **SUCCESSFUL Installation looks like:**
 1. ✅ Server is running with correct command (`agent-inspector anthropic` or `openai`)
-2. ✅ Big ASCII "CYLESTIO" banner displayed (the EXACT one from guide)
-3. ✅ "Installation Complete!" message shown
-4. ✅ Slash commands table displayed
-5. ✅ Quick Start section with next steps
-6. ✅ User knows exactly what to do next
+2. ✅ Agent code ACTUALLY EDITED to include `base_url` parameter
+3. ✅ Big ASCII "CYLESTIO" banner displayed using █ block characters (like this):
+```
+ ██████╗██╗   ██╗██╗     ███████╗███████╗████████╗██╗ ██████╗ 
+██╔════╝╚██╗ ██╔╝██║     ██╔════╝██╔════╝╚══██╔══╝██║██╔═══██╗
+...
+```
+4. ✅ "Installation Complete!" message shown
+5. ✅ Slash commands table displayed
+6. ✅ Quick Start section with next steps
+7. ✅ User knows exactly what to do next
