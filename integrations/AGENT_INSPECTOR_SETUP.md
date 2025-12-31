@@ -27,6 +27,15 @@ STEP 13:   ⚠️ DISPLAY WELCOME MESSAGE ← MANDATORY - Final step!
 
 **If you finish without showing the welcome message, YOU HAVE FAILED.**
 
+### ⚠️ CRITICAL COMMANDS - MEMORIZE THESE:
+
+| Action | ✅ CORRECT Command | ❌ WRONG (will fail) |
+|--------|-------------------|---------------------|
+| Start server | `agent-inspector anthropic` | `agent-inspector serve` |
+| Start server | `agent-inspector openai` | `agent-inspector start` |
+
+**There is NO `serve`, `start`, or `run` subcommand!**
+
 ---
 
 ## ⚠️ COMMANDS THAT WILL HANG - NEVER RUN
@@ -394,15 +403,32 @@ client = OpenAI(
 
 ### 8.1 Start the Server
 
-**Try to start it yourself** in a background terminal:
+**Try to start it yourself** in a background terminal.
 
-#### Production Mode:
+⚠️ **CORRECT COMMAND FORMAT:**
 ```bash
+agent-inspector {PROVIDER}
+```
+Where `{PROVIDER}` is either `anthropic` or `openai` - nothing else!
+
+❌ **WRONG COMMANDS (DO NOT USE):**
+```bash
+# These will FAIL - there is no 'serve' command!
+agent-inspector serve          # WRONG!
+agent-inspector serve --port   # WRONG!
+agent-inspector start          # WRONG!
+agent-inspector run            # WRONG!
+```
+
+✅ **CORRECT COMMANDS:**
+```bash
+# For Anthropic-based agents:
 source {AGENT_PROJECT_FOLDER}/venv/bin/activate
-# Run in background
-agent-inspector anthropic --use-local-storage &
-# OR for OpenAI:
-agent-inspector openai --use-local-storage &
+agent-inspector anthropic &
+
+# For OpenAI-based agents:
+source {AGENT_PROJECT_FOLDER}/venv/bin/activate
+agent-inspector openai &
 ```
 
 #### Local Dev Mode:
@@ -422,9 +448,12 @@ After starting, verify the server is accessible:
 > "Please start Agent Inspector in a separate terminal:
 > ```bash
 > source venv/bin/activate
-> agent-inspector anthropic --use-local-storage
+> agent-inspector anthropic
 > ```
+> (Use `agent-inspector openai` if your agent uses OpenAI)
 > Keep it running while using the security tools."
+
+⚠️ **REMEMBER:** The command is `agent-inspector anthropic` or `agent-inspector openai`. NOT `agent-inspector serve`!
 
 ### 8.3 Wait for Server Startup
 
@@ -449,10 +478,13 @@ echo "NO_STARTUP_SCRIPT"
 
 1. Add Agent Inspector to the startup script
 2. Use the venv's agent-inspector command: `venv/bin/agent-inspector`
-3. Start with: `agent-inspector anthropic --use-local-storage`
+3. Start with: `agent-inspector anthropic` (or `openai` for OpenAI-based agents)
 4. Add it BEFORE other MCP servers (with 3-second wait time)
 
-**Example integration (for start_mcp_servers.py):**
+⚠️ **CORRECT COMMAND:** `agent-inspector anthropic` or `agent-inspector openai`
+❌ **NOT:** `agent-inspector serve` (this command does not exist!)
+
+**Example integration (for start_mcp_servers.py or run.py):**
 
 ```python
 import os
@@ -464,8 +496,9 @@ venv_bin = os.path.join(os.path.dirname(__file__), "venv", "bin")
 agent_inspector_cmd = os.path.join(venv_bin, "agent-inspector")
 
 # Start Agent Inspector first
+# Use "anthropic" or "openai" depending on the LLM provider
 subprocess.Popen(
-    [agent_inspector_cmd, "anthropic", "--use-local-storage"],
+    [agent_inspector_cmd, "anthropic"],  # or "openai"
     stdout=subprocess.DEVNULL,
     stderr=subprocess.DEVNULL
 )
@@ -492,8 +525,9 @@ def main():
     
     if os.path.exists(agent_inspector):
         print("🚀 Starting Agent Inspector...")
+        # Use "anthropic" or "openai" - NOT "serve"!
         subprocess.Popen(
-            [agent_inspector, "anthropic", "--use-local-storage"],
+            [agent_inspector, "anthropic"],  # or "openai" for OpenAI-based agents
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
@@ -819,7 +853,11 @@ This step verifies everything is working and confirms to the user that installat
 
 If the server is running, you can verify MCP tools are available. But even if they're not connected yet, you MUST still display the welcome message.
 
-### 13.2 DISPLAY THIS EXACT CONTENT:
+### 13.2 DISPLAY THIS EXACT ASCII BANNER
+
+⚠️ **COPY THIS EXACTLY - DO NOT CREATE YOUR OWN ASCII ART!**
+
+The banner below spells "CYLESTIO" in block letters. Copy and paste it exactly as shown:
 
 ```
  ██████╗██╗   ██╗██╗     ███████╗███████╗████████╗██╗ ██████╗ 
@@ -831,7 +869,15 @@ If the server is running, you can verify MCP tools are available. But even if th
                     AGENT INSPECTOR
 ```
 
-**✅ Installation Complete! Thanks for using Cylestio Agent Inspector! 🛡️**
+❌ **DO NOT:**
+- Create your own ASCII art
+- Use a different banner
+- Skip the banner
+- Make a simpler text version
+
+✅ **DO:** Copy the exact banner above character-for-character.
+
+**Then say:** "✅ Installation Complete! Thanks for using Cylestio Agent Inspector! 🛡️"
 
 #### What is Agent Inspector?
 
@@ -1289,6 +1335,7 @@ AI: Here's your security assessment report:
 | MCP tools unavailable | Reload IDE, verify server running |
 | Connection refused | Start the server (Step 8) |
 | Permission denied | Activate venv first |
+| `'serve' is not one of 'openai', 'anthropic'` | **WRONG COMMAND!** Use `agent-inspector anthropic` or `agent-inspector openai`. There is NO `serve` subcommand. |
 | Slash commands not appearing | 1. Verify Cursor 1.6+ (Help → About), 2. Check `.cursor/commands/*.md` files exist, 3. Reload Window (Cmd+Shift+P → "Developer: Reload Window"), 4. Slash commands are a beta feature |
 | Rules/commands not detected | Open the agent project folder **directly** in Cursor. Cursor only reads `.cursor/` from workspace root - subfolders are ignored |
 | Installation seems incomplete | Did you display the welcome message (Step 13)? It's mandatory! |
@@ -1300,6 +1347,8 @@ AI: Here's your security assessment report:
 2. **Skipping the welcome message** - Users need confirmation that installation worked. Always complete Step 13.
 3. **Not integrating auto-startup** - Consider adding Agent Inspector to startup scripts (Step 8.5) for better UX.
 4. **Using basic proxy URL instead of workflow URL** - Use `http://localhost:4000/agent-workflow/{name}` not just `http://localhost:4000`. The workflow URL ensures traffic is tracked correctly.
+5. **Using wrong server command** - The command is `agent-inspector anthropic` or `agent-inspector openai`. There is NO `serve`, `start`, or `run` subcommand!
+6. **Creating custom ASCII banner** - Copy the EXACT "CYLESTIO" banner from Step 13. Do NOT create your own ASCII art.
 
 ### ⛔ FAILURE MODES - What BAD installations look like
 
@@ -1318,9 +1367,21 @@ AI: Here's your security assessment report:
 - ❌ Forgot to display welcome message
 - **User thinks:** "The scan ran but... now what?"
 
+**FAILED Installation #4:** Used `agent-inspector serve --port 7100`
+- ❌ Server fails with error: `'serve' is not one of 'openai', 'anthropic'`
+- ❌ Server never actually started
+- **User thinks:** "The installation failed, something is broken"
+- **FIX:** Use `agent-inspector anthropic` or `agent-inspector openai`
+
+**FAILED Installation #5:** Made up custom ASCII banner
+- ❌ Shows some random ASCII art instead of "CYLESTIO"
+- ❌ Looks unprofessional and inconsistent
+- **User thinks:** "Is this the right product?"
+- **FIX:** Copy the EXACT banner from Step 13.2
+
 **SUCCESSFUL Installation looks like:**
-1. ✅ Server is running (or user told exactly how to start)
-2. ✅ Big ASCII "CYLESTIO" banner displayed
+1. ✅ Server is running with correct command (`agent-inspector anthropic` or `openai`)
+2. ✅ Big ASCII "CYLESTIO" banner displayed (the EXACT one from guide)
 3. ✅ "Installation Complete!" message shown
 4. ✅ Slash commands table displayed
 5. ✅ Quick Start section with next steps
