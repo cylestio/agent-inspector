@@ -6,6 +6,29 @@
 
 ---
 
+## 🚨 MANDATORY EXECUTION SEQUENCE - READ THIS FIRST!
+
+**You MUST complete these steps IN ORDER. Do NOT skip any step.**
+
+```
+STEP 1-7:  Setup (venv, pip install, config files, etc.)
+STEP 8:    ⚠️ START THE SERVER ← MANDATORY - Server must be running!
+STEP 8.5:  Add auto-startup (recommended)
+STEP 9:    Tell user to reload IDE
+STEP 10:   Register IDE connection
+STEP 11:   Run first scan (if code exists)
+STEP 12:   Verify completion
+STEP 13:   ⚠️ DISPLAY WELCOME MESSAGE ← MANDATORY - Final step!
+```
+
+### ⛔ YOU ARE NOT DONE UNTIL:
+1. ✅ Agent Inspector server is RUNNING (Step 8)
+2. ✅ User has seen the WELCOME MESSAGE with ASCII banner (Step 13)
+
+**If you finish without showing the welcome message, YOU HAVE FAILED.**
+
+---
+
 ## ⚠️ COMMANDS THAT WILL HANG - NEVER RUN
 
 ```bash
@@ -279,60 +302,217 @@ For more comprehensive skill files, check `integrations/skills/` (if available):
 
 ## STEP 7: UPDATE AGENT CODE TO USE PROXY
 
-**Search for LLM client initialization:**
+### 7.1 Determine the Workflow ID
+
+The workflow ID identifies your agent in Agent Inspector. Use the **project folder name** by default.
+
+```
+{WORKFLOW_ID} = name of the agent project folder
+
+Examples:
+- /home/user/my-sales-bot/     → WORKFLOW_ID = "my-sales-bot"
+- /home/user/agents/chatbot/   → WORKFLOW_ID = "chatbot"
+- /home/user/company-ai/       → WORKFLOW_ID = "company-ai"
+```
+
+### 7.2 Search for LLM Client Initialization
+
 ```bash
 grep -rn "Anthropic\|OpenAI" {AGENT_PROJECT_FOLDER} --include="*.py" | head -20
 ```
 
-**For each match, check if `base_url` is already set:**
-- If `base_url` already points to `localhost:4000` → skip
-- If `base_url` missing or wrong → edit the file
+### 7.3 Update base_url with Workflow-Based URL (PREFERRED)
 
-**Add `base_url` parameter:**
+**For each match, update or add `base_url` using the workflow format:**
 
 ```python
-# Anthropic:
+# Anthropic - use workflow-based URL:
 client = Anthropic(
     api_key="...",
-    base_url="http://localhost:4000"
+    base_url="http://localhost:4000/agent-workflow/{WORKFLOW_ID}"
 )
 
-# OpenAI:
+# OpenAI - use workflow-based URL:
 client = OpenAI(
     api_key="...",
-    base_url="http://localhost:4000/v1"
+    base_url="http://localhost:4000/agent-workflow/{WORKFLOW_ID}/v1"
 )
 ```
 
-**YOU MUST EDIT THE ACTUAL FILES** - use your file editing tools.
+**Real examples:**
+
+```python
+# For a project named "my-sales-bot":
+client = Anthropic(
+    api_key=os.environ.get("ANTHROPIC_API_KEY"),
+    base_url="http://localhost:4000/agent-workflow/my-sales-bot"
+)
+
+# For a project named "customer-support-agent":
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    base_url="http://localhost:4000/agent-workflow/customer-support-agent/v1"
+)
+```
+
+### Why Workflow-Based URLs?
+
+| URL Type | Example | Benefit |
+|----------|---------|---------|
+| ❌ Basic | `http://localhost:4000` | Traffic not associated with workflow |
+| ✅ Workflow | `http://localhost:4000/agent-workflow/my-bot` | Traffic tracked per agent, appears in dashboard correctly |
+
+**The workflow-based URL ensures:**
+- All LLM calls are tracked under the correct agent workflow
+- Dashboard shows sessions organized by agent
+- Dynamic analysis works correctly
+- Correlation between static findings and runtime data is accurate
+
+### 7.4 Check Existing base_url
+
+- If `base_url` already uses workflow format (`localhost:4000/agent-workflow/...`) → verify workflow ID is correct
+- If `base_url` uses basic format (`localhost:4000`) → UPDATE to workflow format
+- If `base_url` missing → ADD with workflow format
+
+**YOU MUST EDIT THE ACTUAL FILES** - use your file editing tools to make these changes.
 
 ---
 
-## STEP 8: START AGENT INSPECTOR SERVER
+## STEP 8: START AGENT INSPECTOR SERVER (REQUIRED)
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  ⚠️  MANDATORY STEP - DO NOT SKIP                                 ║
+║                                                                   ║
+║  The Agent Inspector server MUST be running for MCP to work.      ║
+║  Either start it yourself OR tell the user exactly how to start.  ║
+║                                                                   ║
+║  If you skip this step, the user will get "MCP tools unavailable" ║
+║  errors and think the installation failed.                        ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+### 8.1 Start the Server
 
 **Try to start it yourself** in a background terminal:
 
-### Production Mode:
+#### Production Mode:
 ```bash
+source {AGENT_PROJECT_FOLDER}/venv/bin/activate
 # Run in background
-agent-inspector anthropic &
+agent-inspector anthropic --use-local-storage &
 # OR for OpenAI:
-agent-inspector openai &
+agent-inspector openai --use-local-storage &
 ```
 
-### Local Dev Mode:
+#### Local Dev Mode:
 ```bash
 source {AGENT_PROJECT_FOLDER}/venv/bin/activate
 cylestio-perimeter run --config {PATH_TO_CONFIG} &
 ```
 
+### 8.2 Verify Server is Running
+
+After starting, verify the server is accessible:
+- Dashboard should be at: http://localhost:7100
+- MCP endpoint should be at: http://localhost:7100/mcp
+
 **If background execution fails or isn't supported**, tell the user:
 
-> "Please start Agent Inspector in a terminal:
+> "Please start Agent Inspector in a separate terminal:
 > ```bash
-> agent-inspector anthropic
+> source venv/bin/activate
+> agent-inspector anthropic --use-local-storage
 > ```
 > Keep it running while using the security tools."
+
+### 8.3 Wait for Server Startup
+
+The server takes 2-3 seconds to initialize. Wait before proceeding.
+
+---
+
+## STEP 8.5: INTEGRATE INTO AUTO-STARTUP (RECOMMENDED)
+
+**Goal:** Make Agent Inspector start automatically with your project so users don't have to manually start it each time.
+
+### Check if Project Has Startup Scripts
+
+```bash
+ls {AGENT_PROJECT_FOLDER}/start_mcp_servers.py 2>/dev/null || \
+ls {AGENT_PROJECT_FOLDER}/run.py 2>/dev/null || \
+ls {AGENT_PROJECT_FOLDER}/start.py 2>/dev/null || \
+echo "NO_STARTUP_SCRIPT"
+```
+
+### If Startup Script Exists
+
+1. Add Agent Inspector to the startup script
+2. Use the venv's agent-inspector command: `venv/bin/agent-inspector`
+3. Start with: `agent-inspector anthropic --use-local-storage`
+4. Add it BEFORE other MCP servers (with 3-second wait time)
+
+**Example integration (for start_mcp_servers.py):**
+
+```python
+import os
+import subprocess
+import time
+
+# Get venv's agent-inspector path
+venv_bin = os.path.join(os.path.dirname(__file__), "venv", "bin")
+agent_inspector_cmd = os.path.join(venv_bin, "agent-inspector")
+
+# Start Agent Inspector first
+subprocess.Popen(
+    [agent_inspector_cmd, "anthropic", "--use-local-storage"],
+    stdout=subprocess.DEVNULL,
+    stderr=subprocess.DEVNULL
+)
+print("Starting Agent Inspector on http://localhost:7100")
+time.sleep(3)  # Wait for startup
+
+# ... rest of your startup script
+```
+
+### If No Startup Script Exists
+
+**Option A:** Create a simple startup script:
+
+```python
+#!/usr/bin/env python3
+"""start_services.py - Start Agent Inspector and related services"""
+import os
+import subprocess
+import sys
+
+def main():
+    venv_bin = os.path.join(os.path.dirname(__file__), "venv", "bin")
+    agent_inspector = os.path.join(venv_bin, "agent-inspector")
+    
+    if os.path.exists(agent_inspector):
+        print("🚀 Starting Agent Inspector...")
+        subprocess.Popen(
+            [agent_inspector, "anthropic", "--use-local-storage"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        print("✅ Agent Inspector started on http://localhost:7100")
+    else:
+        print("❌ agent-inspector not found. Run: pip install agent-inspector")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+```
+
+**Option B:** Document the manual start command clearly in README or project docs.
+
+### Why Auto-Startup Matters
+
+- Users won't have to remember to start Agent Inspector manually
+- Prevents "MCP tools unavailable" errors
+- Professional, seamless experience
 
 ---
 
@@ -517,6 +697,8 @@ Your logic:
 
 ## STEP 11: RUN FIRST STATIC SCAN
 
+> ⚠️ **Prerequisite:** Agent Inspector server must be running (Step 8). If not started, go back and start it now!
+
 **If there's agent code in the project, run a security scan immediately.**
 
 ### 11.1 Check for Code
@@ -589,19 +771,55 @@ Gate Status: 🔒 BLOCKED / ✅ OPEN
 If MCP not connected yet, tell user:
 > "Reload Cursor, then type `/agent-scan` and I'll analyze your agent code."
 
+**⚠️ After scanning (or if no code to scan), CONTINUE TO STEP 13 to display the welcome message!**
+
 ---
 
-## STEP 12: DISCOVER TOOLS & SHOW WELCOME
+## STEP 12: COMPLETE INSTALLATION
 
-### 12.1 Get Available Tools
+⚠️ **REMINDER:** You MUST complete Step 13 (Display Welcome Message) before finishing.
+This step verifies everything is working and confirms to the user that installation succeeded.
 
-Query the `agent-inspector` MCP server for available tools.
+**Steps remaining:**
+- Step 12 - Verify MCP connection and capabilities
+- **Step 13 - DISPLAY WELCOME MESSAGE** ← MANDATORY FINAL STEP
 
-### 12.2 Understand & Explain
+---
 
-**You're smart.** Read the tool names and descriptions. Figure out what's actually possible - don't assume features exist. Only mention capabilities you can verify from the tool list.
+## STEP 13: DISPLAY WELCOME MESSAGE (MANDATORY - DO NOT SKIP!)
 
-### 12.3 Display Welcome Message
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  ⚠️  THIS IS THE FINAL MANDATORY STEP                            ║
+║                                                                   ║
+║  YOU MUST display the welcome message below to the user.          ║
+║  If you skip this step, the installation is INCOMPLETE.           ║
+║                                                                   ║
+║  DO NOT end your response without showing the ASCII banner        ║
+║  and confirming installation is complete.                         ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+### WHY THIS STEP EXISTS
+
+- User needs CONFIRMATION that installation worked
+- Without the welcome message, user doesn't know what to do next
+- This is the professional way to complete an installation
+- **Skipping this step = installation failure**
+
+### EXACT ACTIONS TO TAKE
+
+**Action 1:** Display the ASCII art banner (copy exactly as shown below)
+**Action 2:** Say "Installation Complete!"
+**Action 3:** List the slash commands table
+**Action 4:** Show the "Quick Start" section
+**Action 5:** Confirm you're ready to help
+
+### 13.1 (Optional) Check MCP Tools
+
+If the server is running, you can verify MCP tools are available. But even if they're not connected yet, you MUST still display the welcome message.
+
+### 13.2 DISPLAY THIS EXACT CONTENT:
 
 ```
  ██████╗██╗   ██╗██╗     ███████╗███████╗████████╗██╗ ██████╗ 
@@ -613,7 +831,7 @@ Query the `agent-inspector` MCP server for available tools.
                     AGENT INSPECTOR
 ```
 
-**Thanks for using Cylestio Agent Inspector! 🛡️**
+**✅ Installation Complete! Thanks for using Cylestio Agent Inspector! 🛡️**
 
 #### What is Agent Inspector?
 
@@ -796,7 +1014,7 @@ Your agent is evaluated against 7 security categories:
 
 - **Dashboard:** http://localhost:7100  
 - **Static Analysis:** http://localhost:7100/agent-workflow/{id}/static-analysis
-- **Proxy:** http://localhost:4000
+- **Proxy:** http://localhost:4000/agent-workflow/{your-workflow-id}
 
 #### I'll Remember Agent Inspector
 
@@ -804,32 +1022,98 @@ The rules file ensures I'll use these tools when you ask about security - even i
 
 ---
 
+### 13.3 SAY THIS EXACT TEXT (Required)
+
+After the welcome content above, you MUST say:
+
+---
+
+✅ **Agent Inspector installation is complete!**
+
+**🚀 Quick Start - What to do next:**
+1. Type `/agent-scan` to run your first security scan
+2. Visit http://localhost:7100 to see the dashboard  
+3. Use `/agent-fix REC-XXX` to fix any issues found
+
+**Need help?** Just ask me about Agent Inspector or any security concerns!
+
+---
+
+### 13.4 VERIFY YOU COMPLETED THIS STEP
+
+Ask yourself:
+- ✅ Did I show the ASCII art banner? (The big "CYLESTIO" text)
+- ✅ Did I say "Installation Complete"?
+- ✅ Did I show the slash commands table?
+- ✅ Did I show the Quick Start section?
+
+**If any answer is NO, go back and do it now.**
+
+**DO NOT proceed to the checklist or end your response until ALL of the above are YES.**
+
+---
+
 ## CHECKLIST - VERIFY COMPLETION
 
+**Before ending your response, verify EVERY item below is checked.**
+
+### Setup Steps (Steps 1-7)
 - [ ] Identified agent project folder
-- [ ] **Verified user opened project folder directly** (not a parent folder containing multiple projects)
+- [ ] Verified user opened project folder directly (not a parent folder)
 - [ ] Checked/created virtual environment
-- [ ] Ran `pip install` (saw success message)
-- [ ] Created/updated MCP config file (`.cursor/mcp.json`)
-- [ ] Created rules file: `.cursor/rules/agent-inspector.mdc`
-- [ ] **CRITICAL:** Installed slash commands in `.cursor/commands/`
-  - [ ] Copied all `.md` files from `integrations/cursor/cursor-commands/`
-  - [ ] Verified: agent-scan.md, agent-fix.md, agent-analyze.md, agent-correlate.md, agent-gate.md, agent-report.md, agent-status.md
-- [ ] Updated agent code with `base_url`
-- [ ] Started server OR told user how to start it
-- [ ] Told user to reload IDE
-- [ ] **Registered IDE connection** (or set PENDING_IDE_REGISTRATION reminder)
-- [ ] Ran first static scan (if code exists and MCP connected) OR told user to ask for scan after reload
-  - [ ] **IDE registered for scan target workflow** (before create_analysis_session)
-  - [ ] Workflow ID matched between IDE registration and analysis session
-- [ ] Displayed welcome message with ONLY verified capabilities
+- [ ] Ran `pip install` (saw "Successfully installed" or "Requirement already satisfied")
+- [ ] Created/updated `.cursor/mcp.json` with agent-inspector config
+- [ ] Created `.cursor/rules/agent-inspector.mdc`
+- [ ] Copied slash commands to `.cursor/commands/` (7 files: agent-scan.md, agent-fix.md, agent-analyze.md, agent-correlate.md, agent-gate.md, agent-report.md, agent-status.md)
+- [ ] Updated agent code with `base_url` (if applicable)
 
-**ALL BOXES MUST BE CHECKED.**
+### 🔴 MANDATORY: Server Startup (Step 8)
+- [ ] **Started Agent Inspector server** - one of these MUST be true:
+  - [ ] Started server in background terminal myself, OR
+  - [ ] Told user EXACTLY how to start it with specific command
 
-**REMEMBER:** 
-- Always register IDE for the workflow being scanned (Step 0 of every scan)
-- Workflow ID must match between `register_ide_connection` and `create_analysis_session`
-- If IDE connection registration failed, retry on every subsequent MCP call!
+### Optional: Auto-Startup (Step 8.5)  
+- [ ] Checked for startup scripts
+- [ ] Integrated Agent Inspector into startup (if scripts exist)
+
+### Connection Steps (Steps 9-12)
+- [ ] Told user to reload IDE (Settings → Tools & MCP → Reload)
+- [ ] Registered IDE connection (or noted it will happen on first scan)
+- [ ] Ran first static scan if code exists
+
+### 🔴 MANDATORY: Welcome Message (Step 13) - FINAL STEP!
+
+**⛔ STOP! Before you end your response, verify:**
+
+- [ ] **Did you display the ASCII art "CYLESTIO" banner?** If NO → Go display it now!
+- [ ] **Did you show the slash commands table?** If NO → Go show it now!
+- [ ] **Did you say "Installation Complete"?** If NO → Go say it now!
+- [ ] **Did you show the Quick Start section?** If NO → Go show it now!
+
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║   IF ANY OF THE ABOVE ARE "NO", YOU ARE NOT DONE.                 ║
+║   GO BACK AND COMPLETE STEP 13 BEFORE ENDING YOUR RESPONSE.       ║
+║                                                                    ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## FINAL SELF-CHECK
+
+**Ask yourself these questions before finishing:**
+
+1. **Is the server running (or did I tell the user how to start it)?**
+   - YES → Continue
+   - NO → Go back to Step 8
+
+2. **Did I display the welcome message with ASCII banner?**
+   - YES → You're done! ✅
+   - NO → Go back to Step 13 and display it NOW
+
+**The installation is FAILED if the user did not see the welcome message.**
 
 ---
 
@@ -850,7 +1134,7 @@ Each finding gets a `REC-XXX` recommendation ID. Fix them with `/fix REC-XXX`.
 ```
 
 **Prerequisites:**
-1. Agent must send traffic through the proxy (`base_url="http://localhost:4000"`)
+1. Agent must send traffic through the proxy (`base_url="http://localhost:4000/agent-workflow/{workflow-id}"`)
 2. At least 1 completed session available
 
 **Key behaviors:**
@@ -992,16 +1276,52 @@ AI: Here's your security assessment report:
 
 ## REFERENCE
 
-| Port | Service |
-|------|---------|
-| 4000 | LLM Proxy (agent's `base_url`) |
-| 7100 | Dashboard + MCP Server |
+| Port | Service | URL Format |
+|------|---------|------------|
+| 4000 | LLM Proxy | `http://localhost:4000/agent-workflow/{workflow-id}` (Anthropic) or `/v1` suffix (OpenAI) |
+| 7100 | Dashboard + MCP Server | `http://localhost:7100` |
+
+### Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
 | Command not found | Re-run install step |
 | MCP tools unavailable | Reload IDE, verify server running |
-| Connection refused | Start the server |
+| Connection refused | Start the server (Step 8) |
 | Permission denied | Activate venv first |
 | Slash commands not appearing | 1. Verify Cursor 1.6+ (Help → About), 2. Check `.cursor/commands/*.md` files exist, 3. Reload Window (Cmd+Shift+P → "Developer: Reload Window"), 4. Slash commands are a beta feature |
 | Rules/commands not detected | Open the agent project folder **directly** in Cursor. Cursor only reads `.cursor/` from workspace root - subfolders are ignored |
+| Installation seems incomplete | Did you display the welcome message (Step 13)? It's mandatory! |
+| Server not starting automatically | Add auto-startup integration (Step 8.5) |
+
+### Common Mistakes
+
+1. **Not starting the server** - The MCP tools won't work without the server running. Always complete Step 8.
+2. **Skipping the welcome message** - Users need confirmation that installation worked. Always complete Step 13.
+3. **Not integrating auto-startup** - Consider adding Agent Inspector to startup scripts (Step 8.5) for better UX.
+4. **Using basic proxy URL instead of workflow URL** - Use `http://localhost:4000/agent-workflow/{name}` not just `http://localhost:4000`. The workflow URL ensures traffic is tracked correctly.
+
+### ⛔ FAILURE MODES - What BAD installations look like
+
+**FAILED Installation #1:** "I've set up the config files. Let me know if you need anything else."
+- ❌ No server started
+- ❌ No welcome message
+- **User thinks:** "Is it installed? What do I do now?"
+
+**FAILED Installation #2:** "Installation complete. The server should be running on port 7100."
+- ❌ No ASCII banner
+- ❌ No slash commands table
+- ❌ No Quick Start guidance
+- **User thinks:** "What commands can I use? How do I start?"
+
+**FAILED Installation #3:** Ends response after Step 11 (running first scan)
+- ❌ Forgot to display welcome message
+- **User thinks:** "The scan ran but... now what?"
+
+**SUCCESSFUL Installation looks like:**
+1. ✅ Server is running (or user told exactly how to start)
+2. ✅ Big ASCII "CYLESTIO" banner displayed
+3. ✅ "Installation Complete!" message shown
+4. ✅ Slash commands table displayed
+5. ✅ Quick Start section with next steps
+6. ✅ User knows exactly what to do next
