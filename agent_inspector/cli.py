@@ -11,6 +11,8 @@ from typing import Any, Dict, Optional
 import typer
 import yaml
 
+from agent_inspector.defaults import PROVIDER_DEFAULTS
+
 BANNER = r"""
     _                    _     ___                           _             
    / \   __ _  ___ _ __ | |_  |_ _|_ __  ___ _ __   ___  ___| |_ ___  _ __ 
@@ -34,11 +36,19 @@ class Provider(str, Enum):
 
 
 def _load_config(provider: Provider) -> Dict[str, Any]:
-    config_path = CONFIG_DIR / f"{provider.value}.yaml"
+    config_path = CONFIG_DIR / "base.yaml"
     if not config_path.exists():
         raise FileNotFoundError(f"Missing bundled config: {config_path}")
     with config_path.open("r", encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
+        config = yaml.safe_load(handle)
+
+    # Inject provider-specific defaults
+    defaults = PROVIDER_DEFAULTS[provider.value]
+    config.setdefault("llm", {})
+    config["llm"]["base_url"] = defaults["base_url"]
+    config["llm"]["type"] = defaults["type"]
+
+    return config
 
 
 def _dump_config(config: Dict[str, Any], destination: Path) -> None:
@@ -129,6 +139,11 @@ def _entrypoint(
         "--local-storage-path",
         help="Custom database path for local storage (requires --use-local-storage).",
     ),
+    log_level: Optional[str] = typer.Option(
+        None,
+        "--log-level",
+        help="Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).",
+    ),
 ) -> None:
     """Agent Inspector by Cylestio lets you debug, inspect, and evaluate agent behaviour and risk."""
 
@@ -169,6 +184,9 @@ def _entrypoint(
                 err=True,
             )
             raise typer.Exit(code=1)
+
+    if log_level is not None:
+        config.setdefault("logging", {})["level"] = log_level.upper()
 
     _print_banner()
     typer.secho(f"Agent Inspector loading the {provider.value} perimeter profile...", fg=typer.colors.GREEN)
