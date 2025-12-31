@@ -80,14 +80,24 @@ Dashboard: http://localhost:7100
 mkdir -p .cursor/commands
 ```
 
-Copy these 7 files from `integrations/cursor/cursor-commands/` to `.cursor/commands/`:
-- agent-scan.md
-- agent-fix.md
-- agent-analyze.md
-- agent-correlate.md
-- agent-gate.md
-- agent-report.md
-- agent-status.md
+**IMPORTANT: You must READ and COPY the FULL content of each file!**
+
+For each of these 7 files:
+1. READ the source file from `integrations/cursor/cursor-commands/`
+2. WRITE the FULL content to `.cursor/commands/`
+
+| Source | Destination |
+|--------|-------------|
+| `integrations/cursor/cursor-commands/agent-scan.md` | `.cursor/commands/agent-scan.md` |
+| `integrations/cursor/cursor-commands/agent-fix.md` | `.cursor/commands/agent-fix.md` |
+| `integrations/cursor/cursor-commands/agent-analyze.md` | `.cursor/commands/agent-analyze.md` |
+| `integrations/cursor/cursor-commands/agent-correlate.md` | `.cursor/commands/agent-correlate.md` |
+| `integrations/cursor/cursor-commands/agent-gate.md` | `.cursor/commands/agent-gate.md` |
+| `integrations/cursor/cursor-commands/agent-report.md` | `.cursor/commands/agent-report.md` |
+| `integrations/cursor/cursor-commands/agent-status.md` | `.cursor/commands/agent-status.md` |
+
+**DO NOT create empty files or write minimal content!**
+Each file contains 70-140 lines of detailed instructions. Copy ALL of it.
 
 ---
 
@@ -139,10 +149,10 @@ Or for OpenAI: `agent-inspector openai`
 
 ---
 
-## STEP 5: RELOAD CURSOR
+## STEP 5: RELOAD MCP SERVERS
 
 Tell user:
-> Press `Cmd+Shift+P` → "Developer: Reload Window"
+> Go to **Cursor Settings → Tools & MCP** → Click the reload/refresh button on MCP servers
 
 ---
 
@@ -173,7 +183,7 @@ Tell user:
 | `/agent-report` | Generate report |
 
 **Quick Start:**
-1. Reload Cursor (Cmd+Shift+P → "Reload Window")
+1. Reload MCP servers (Settings → Tools & MCP → Reload)
 2. Type `/agent-scan` to scan your code
 3. Visit http://localhost:7100 for dashboard
 
@@ -186,7 +196,7 @@ Before finishing, verify:
 - [ ] Package installed
 - [ ] `.cursor/mcp.json` created
 - [ ] `.cursor/rules/agent-inspector.mdc` created  
-- [ ] Slash commands copied to `.cursor/commands/`
+- [ ] Slash commands copied with FULL content (each file 70-140 lines, not empty!)
 - [ ] **Agent code EDITED with base_url** (grep shows results)
 - [ ] Server started (`agent-inspector anthropic`)
 - [ ] **Welcome message displayed with CYLESTIO banner**
@@ -199,7 +209,7 @@ Before finishing, verify:
 |---------|----------|
 | `'serve' is not one of 'openai', 'anthropic'` | Use `agent-inspector anthropic` not `serve` |
 | Sessions not captured | Edit agent code to add `base_url` (Step 3) |
-| MCP tools unavailable | Reload Cursor, check server is running |
+| MCP tools unavailable | Reload MCP servers in Settings, check server is running |
 
 ---
 
@@ -209,4 +219,5 @@ Before finishing, verify:
 ❌ `base_url="http://localhost:4000"` → Missing workflow ID  
 ❌ Creating your own ASCII art → Copy the exact CYLESTIO banner  
 ❌ Mentioning base_url without editing files → Actually edit the code  
-❌ Finishing without welcome message → Always show it
+❌ Finishing without welcome message → Always show it  
+❌ Creating empty/minimal slash command files → Copy FULL content from source files
