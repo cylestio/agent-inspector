@@ -144,6 +144,11 @@ def _entrypoint(
         "--log-level",
         help="Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).",
     ),
+    no_presidio: bool = typer.Option(
+        False,
+        "--no-presidio",
+        help="Disable Presidio PII detection (enabled by default).",
+    ),
 ) -> None:
     """Agent Inspector by Cylestio lets you debug, inspect, and evaluate agent behaviour and risk."""
 
@@ -187,6 +192,13 @@ def _entrypoint(
 
     if log_level is not None:
         config.setdefault("logging", {})["level"] = log_level.upper()
+
+    if no_presidio:
+        interceptors = config.setdefault("interceptors", [])
+        for interceptor in interceptors:
+            if interceptor.get("type") == "live_trace":
+                interceptor.setdefault("config", {})["enable_presidio"] = False
+                break
 
     _print_banner()
     typer.secho(f"Agent Inspector loading the {provider.value} perimeter profile...", fg=typer.colors.GREEN)
