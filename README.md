@@ -55,6 +55,18 @@ This starts:
 - A proxy server on port 4000 (configurable)
 - A live trace dashboard on port 7100 (configurable)
 
+### CLI Options
+
+| Flag | Description |
+|------|-------------|
+| `--port`, `-p` | Override the proxy server port (default: 4000) |
+| `--ui-port` | Override the dashboard port (default: 7100) |
+| `--base-url` | Override the LLM provider base URL |
+| `--use-local-storage` | Enable persistent SQLite storage for traces |
+| `--local-storage-path` | Custom database path (requires `--use-local-storage`) |
+| `--log-level` | Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
+| `--no-presidio` | Disable Presidio PII detection (enabled by default) |
+
 Point your agent to the proxy:
 
 ```python
