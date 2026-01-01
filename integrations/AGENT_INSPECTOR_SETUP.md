@@ -24,13 +24,18 @@ PORTS:
 
 ---
 
-## STEP 1: INSTALL PACKAGE
+## STEP 1: INSTALL OR UPGRADE PACKAGE
 
 ```bash
 cd {PROJECT_FOLDER}
 python -m venv venv
 source venv/bin/activate
 pip install agent-inspector
+```
+
+**Already installed? Upgrade to the latest version:**
+```bash
+pip install --upgrade agent-inspector
 ```
 
 ---
@@ -82,12 +87,13 @@ mkdir -p .cursor/commands
 
 **IMPORTANT: You must READ and COPY the FULL content of each file!**
 
-For each of these 7 files:
+For each of these 8 files:
 1. READ the source file from `integrations/cursor/cursor-commands/`
 2. WRITE the FULL content to `.cursor/commands/`
 
 | Source | Destination |
 |--------|-------------|
+| `integrations/cursor/cursor-commands/agent-setup.md` | `.cursor/commands/agent-setup.md` |
 | `integrations/cursor/cursor-commands/agent-scan.md` | `.cursor/commands/agent-scan.md` |
 | `integrations/cursor/cursor-commands/agent-fix.md` | `.cursor/commands/agent-fix.md` |
 | `integrations/cursor/cursor-commands/agent-analyze.md` | `.cursor/commands/agent-analyze.md` |
@@ -147,6 +153,30 @@ Or for OpenAI: `agent-inspector openai`
 
 **Keep it running in a terminal.**
 
+### CLI Options
+
+| Flag | Description |
+|------|-------------|
+| `--port`, `-p` | Override proxy port (default: 4000) |
+| `--ui-port` | Override dashboard port (default: 7100) |
+| `--base-url` | Override LLM provider base URL |
+| `--use-local-storage` | Enable persistent SQLite storage for traces |
+| `--local-storage-path` | Custom database path (requires `--use-local-storage`) |
+| `--log-level` | Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
+| `--no-presidio` | Disable PII detection (enabled by default) |
+
+**Examples:**
+```bash
+# Use custom ports
+agent-inspector anthropic --port 5000 --ui-port 8100
+
+# Point to a different LLM endpoint
+agent-inspector openai --base-url https://my-custom-api.com/v1
+
+# Enable persistent storage with debug logging
+agent-inspector anthropic --use-local-storage --log-level DEBUG
+```
+
 ---
 
 ## STEP 5: RELOAD MCP SERVERS
@@ -176,6 +206,7 @@ Tell user:
 
 | Command | Description |
 |---------|-------------|
+| `/agent-setup` | Install, upgrade, start server |
 | `/agent-scan` | Run security scan |
 | `/agent-analyze` | Runtime analysis |
 | `/agent-fix REC-XXX` | Fix an issue |
@@ -187,6 +218,8 @@ Tell user:
 2. Type `/agent-scan` to scan your code
 3. Visit http://localhost:7100 for dashboard
 
+**Coming back later?** Run `/agent-setup` to start the server again.
+
 ---
 
 ## CHECKLIST
@@ -196,7 +229,7 @@ Before finishing, verify:
 - [ ] Package installed
 - [ ] `.cursor/mcp.json` created
 - [ ] `.cursor/rules/agent-inspector.mdc` created  
-- [ ] Slash commands copied with FULL content (each file 70-140 lines, not empty!)
+- [ ] Slash commands copied with FULL content (8 files, each 70-150 lines, not empty!)
 - [ ] **Agent code EDITED with base_url** (grep shows results)
 - [ ] Server started (`agent-inspector anthropic`)
 - [ ] **Welcome message displayed with CYLESTIO banner**
@@ -210,6 +243,8 @@ Before finishing, verify:
 | `'serve' is not one of 'openai', 'anthropic'` | Use `agent-inspector anthropic` not `serve` |
 | Sessions not captured | Edit agent code to add `base_url` (Step 3) |
 | MCP tools unavailable | Reload MCP servers in Settings, check server is running |
+| Missing features / old version | Upgrade: `pip install --upgrade agent-inspector` |
+| Command not found | Re-install: `pip install agent-inspector` |
 
 ---
 

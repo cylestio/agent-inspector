@@ -25,6 +25,18 @@ pip install agent-inspector
 agent-inspector anthropic
 ```
 
+### CLI Options
+
+| Flag | Description |
+|------|-------------|
+| `--port`, `-p` | Override proxy port (default: 4000) |
+| `--ui-port` | Override dashboard port (default: 7100) |
+| `--base-url` | Override LLM provider base URL |
+| `--use-local-storage` | Enable persistent SQLite storage |
+| `--local-storage-path` | Custom database path |
+| `--log-level` | DEBUG, INFO, WARNING, ERROR, CRITICAL |
+| `--no-presidio` | Disable PII detection |
+
 ## Available Commands
 
 | Command | Description |
