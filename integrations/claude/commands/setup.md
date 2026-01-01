@@ -235,6 +235,30 @@ agent-inspector openai
 - Dashboard: http://localhost:7100
 - Proxy: http://localhost:4000
 
+**CLI Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--port`, `-p` | Override proxy port (default: 4000) |
+| `--ui-port` | Override dashboard port (default: 7100) |
+| `--base-url` | Override LLM provider base URL |
+| `--use-local-storage` | Enable persistent SQLite storage |
+| `--local-storage-path` | Custom database path |
+| `--log-level` | DEBUG, INFO, WARNING, ERROR, CRITICAL |
+| `--no-presidio` | Disable PII detection |
+
+**Examples:**
+```bash
+# Use custom ports
+agent-inspector anthropic --port 5000 --ui-port 8100
+
+# Point to a different LLM endpoint (e.g., Azure OpenAI, local model)
+agent-inspector openai --base-url https://my-azure-openai.openai.azure.com
+
+# Enable debug logging with persistent storage
+agent-inspector anthropic --use-local-storage --log-level DEBUG
+```
+
 ## Available Commands
 
 | Command | Description |
