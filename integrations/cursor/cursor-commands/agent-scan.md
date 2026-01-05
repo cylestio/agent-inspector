@@ -15,13 +15,16 @@ Use the **same `agent_workflow_id`** for ALL commands (scan, analyze, correlate,
 
 ### Step 1: Register IDE Connection
 
-Call `register_ide_connection` with:
-- `ide_type`: "cursor"
-- `agent_workflow_id`: the value derived in Step 0
-- `workspace_path`: full workspace path
-- `model`: your AI model name (check system prompt for "powered by X")
-
-Save the `connection_id` from response. Send ONE `ide_heartbeat(connection_id, is_developing=true)`.
+Send a heartbeat at session start:
+```
+ide_heartbeat(
+  agent_workflow_id=agent_workflow_id,
+  ide_type="cursor",
+  workspace_path="/full/path/to/workspace",
+  model="your-model-name"  # Check system prompt for "powered by X"
+)
+```
+Activity is automatically tracked on every MCP tool call.
 
 ### Step 2: Create Analysis Session
 

@@ -28,6 +28,19 @@ Agent Inspector MCP endpoint at `http://localhost:7100/mcp` provides security an
 - `get_agents` - List agents (filter by agent_workflow_id or "unlinked")
 - `update_agent_info` - Link agents to agent workflows, set display names
 
+## Activity Tracking
+
+Activity is automatically tracked when any MCP tool is called with `agent_workflow_id`.
+Optionally call `ide_heartbeat` at session start for richer dashboard display:
+```
+ide_heartbeat(
+  agent_workflow_id="{agent_workflow_id}",
+  ide_type="cursor",
+  workspace_path="{path}",
+  model="{your_model}"
+)
+```
+
 ## AUTOMATIC WORKFLOW
 
 When user asks for security analysis, follow this flow:

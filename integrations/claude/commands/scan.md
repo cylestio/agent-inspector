@@ -35,19 +35,16 @@ Auto-derive from (priority order):
 3. Folder name: `/projects/my-bot` -> `my-bot`
 
 ### 2. Register IDE Connection
-If not already registered in this session:
+Send a heartbeat at session start:
 ```
-register_ide_connection(
-  ide_type="claude-code",
+ide_heartbeat(
   agent_workflow_id=agent_workflow_id,
+  ide_type="claude-code",
   workspace_path="/full/path/to/workspace",
   model="claude-opus-4-5-20251101"  # Your model from system prompt
 )
 ```
-Save the `connection_id` from response, then send one heartbeat:
-```
-ide_heartbeat(connection_id, is_developing=true)
-```
+Activity is automatically tracked on every MCP tool call.
 
 ### 3. Create Analysis Session
 ```
