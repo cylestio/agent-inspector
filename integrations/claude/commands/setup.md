@@ -32,9 +32,23 @@ Check if the `get_security_patterns` MCP function is available to you. This is a
 get_security_patterns()
 ```
 
-**If it returns data** → Server is running → **Setup complete! Skip to Step 7 to report success.**
+**If it returns data** → Server is running → **Continue to Step 1.3 to check for updates.**
 
 **If MCP unavailable or server not running** → Continue to Step 2.
+
+#### 1.3 Check for Updates (even if server is running)
+
+Always ensure the latest version is installed. Run the upgrade command based on available package manager:
+
+```bash
+# Try in order until one works:
+uv tool install agent-inspector --upgrade 2>/dev/null || \
+pipx upgrade agent-inspector 2>/dev/null || \
+pip install --upgrade agent-inspector 2>/dev/null || \
+echo "Upgrade check complete"
+```
+
+After upgrade, **skip to Step 7 to report success.**
 
 ### Step 2: Environment Check (only if Step 1 failed)
 

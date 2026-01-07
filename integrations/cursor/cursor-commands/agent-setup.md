@@ -18,9 +18,23 @@ Check if the server is running:
 curl -s http://localhost:7100/health
 ```
 
-**If returns `{"status":"ok"}`** → Server is running → **Skip to Step 6 to report success.**
+**If returns `{"status":"ok"}`** → Server is running → **Continue to Step 1.2 to check for updates.**
 
 **If connection refused or no response** → Continue to Step 2.
+
+### Step 1.2: Check for Updates (even if server is running)
+
+Always ensure the latest version is installed:
+
+```bash
+# Try in order until one works:
+uv tool install agent-inspector --upgrade 2>/dev/null || \
+pipx upgrade agent-inspector 2>/dev/null || \
+pip install --upgrade agent-inspector 2>/dev/null || \
+echo "Upgrade check complete"
+```
+
+After upgrade, **skip to Step 6 to report success.**
 
 ### Step 2: Check Installation
 
