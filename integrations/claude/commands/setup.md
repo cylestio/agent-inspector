@@ -292,21 +292,18 @@ agent-inspector anthropic --use-local-storage --log-level DEBUG
 
 ## IDE Registration
 
-When starting Agent Inspector work, register the connection:
+When starting Agent Inspector work, send a heartbeat to register your IDE:
 
 ```
-register_ide_connection(
-  ide_type="claude-code",
+ide_heartbeat(
   agent_workflow_id="{project_name}",
+  ide_type="claude-code",
   workspace_path="{full_path}",
   model="{your_model}"  # e.g., "claude-sonnet-4"
 )
 ```
 
-Send ONE heartbeat at the start of work:
-```
-ide_heartbeat(connection_id="{id}", is_developing=true)
-```
+That's it! Activity is automatically tracked when you call any MCP tool with `agent_workflow_id`.
 
 ### Model Name Mapping
 

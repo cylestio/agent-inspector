@@ -65,12 +65,11 @@ Slash commands are installed in `.cursor/commands/`. They invoke Agent Inspector
 ### IDE Connection Tools
 | Tool | Description |
 |------|-------------|
-| `register_ide_connection` | Register your IDE (Cursor or Claude Code) as connected |
-| `ide_heartbeat` | Keep connection alive, signal active development |
-| `disconnect_ide` | Disconnect IDE from Agent Inspector |
-| `get_ide_connection_status` | Check current IDE connection status |
+| `ide_heartbeat` | Register IDE at session start (provides ide_type, workspace, model) |
 
-## IDE CONNECTION (REQUIRED FIRST STEP)
+Activity is automatically tracked when any MCP tool is called with `agent_workflow_id`.
+
+## IDE CONNECTION (REQUIRED AT SESSION START)
 
 ### Step 1: Know Your Model
 **You MUST identify what AI model you are.** Common values:
@@ -78,30 +77,21 @@ Slash commands are installed in `.cursor/commands/`. They invoke Agent Inspector
 - `gpt-4o`, `gpt-4-turbo`
 - Check your system prompt for "powered by X"
 
-### Step 2: Register with ALL Parameters
+### Step 2: Send Heartbeat at Session Start
 ```
-register_ide_connection(
-  ide_type="cursor",                      // "cursor" or "claude-code"
-  agent_workflow_id="{agent_workflow_id}",    // from folder name
-  workspace_path="{full_path}",           // workspace path
-  model="{your_model_name}"               // e.g., "claude-opus-4.5"
+ide_heartbeat(
+  agent_workflow_id="{agent_workflow_id}",  // from folder name
+  ide_type="cursor",                        // "cursor" or "claude-code"
+  workspace_path="{full_path}",             // workspace path
+  model="{your_model_name}"                 // e.g., "claude-opus-4.5"
 )
 ```
 
-### Step 3: Save connection_id
-**SAVE the `connection_id` from the response!** You need it for heartbeats.
-
-### Step 4: ONE Heartbeat (Save Tokens!)
-Send **ONE** heartbeat at the start of work, NOT after every action:
-```
-ide_heartbeat(connection_id="{id}", is_developing=true)
-```
-
-⚠️ **Don't spam heartbeats** - one per task is enough!
+That's it! Activity is automatically tracked when you call any MCP tool with `agent_workflow_id`.
 
 **Dashboard indicators:**
-- 🟢 **Green**: IDE connected (lasts 60s after heartbeat)
-- 🟢✨ **Pulsing green**: Actively developing
+- 🟢 **Green**: IDE activity detected
+- Shows IDE type, workspace, model when heartbeat was sent
 
 ## AUTOMATIC WORKFLOW
 
@@ -933,35 +923,29 @@ get_session_events(session_id, event_types=["llm.call.start", "llm.call.finish"]
 
 ## Key Rules
 
-1. **Register IDE ALWAYS** - Call `register_ide_connection` at the start of each session
-2. **Retry if failed** - If registration fails, retry on EVERY subsequent MCP call until successful
-3. **Send heartbeats** - Call `ide_heartbeat` before/after significant actions
-4. **Auto-derive** agent_workflow_id - don't ask user
-5. **Auto-link** unlinked agents via `update_agent_info`
-6. **Auto-correlate** when both static + dynamic data exist
-7. **Never hardcode** security patterns - always fetch from MCP
-8. **Same agent_workflow_id** for static and dynamic = unified results
-9. **Dashboard URL**: `http://localhost:7100/agent-workflow/{agent_workflow_id}`
+1. **Send heartbeat at session start** - Call `ide_heartbeat` once when starting work
+2. **Activity auto-tracked** - Every MCP tool call with `agent_workflow_id` updates activity
+3. **Auto-derive** agent_workflow_id - don't ask user
+4. **Auto-link** unlinked agents via `update_agent_info`
+5. **Auto-correlate** when both static + dynamic data exist
+6. **Never hardcode** security patterns - always fetch from MCP
+7. **Same agent_workflow_id** for static and dynamic = unified results
+8. **Dashboard URL**: `http://localhost:7100/agent-workflow/{agent_workflow_id}`
 
 ## IDE CONNECTION (Only When Using Agent Inspector)
 
 **Only connect when user asks for security analysis.** Don't connect proactively.
 
-### Lightweight Flow (3 calls max):
+### Simple Flow:
 ```
-// 1. Register (idempotent - safe to repeat)
-register_ide_connection(
-  ide_type="cursor",
+// 1. Send heartbeat at session start
+ide_heartbeat(
   agent_workflow_id="{folder_name}",
+  ide_type="cursor",
   workspace_path="{path}",
   model="claude-opus-4.5"  // or your model
 )
 
-// 2. ONE heartbeat at start
-ide_heartbeat(connection_id="{id}", is_developing=true)
-
-// 3. Do all your work (scans, fixes, etc.)
-// NO MORE HEARTBEATS NEEDED
+// 2. Do all your work (scans, fixes, etc.)
+// Activity is automatically tracked on every MCP tool call!
 ```
-
-**Skip `get_ide_connection_status`** - just register directly. Simpler.
