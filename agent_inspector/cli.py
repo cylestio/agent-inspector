@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import tempfile
 from enum import Enum
+from importlib.metadata import PackageNotFoundError, version as get_package_version
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -98,6 +99,16 @@ def _cleanup_temp_dir(path: Path) -> None:
     shutil.rmtree(path, ignore_errors=True)
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        try:
+            pkg_version = get_package_version("agent-inspector")
+        except PackageNotFoundError:
+            pkg_version = "unknown"
+        typer.echo(f"agent-inspector {pkg_version}")
+        raise typer.Exit()
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -148,6 +159,14 @@ def _entrypoint(
         False,
         "--no-presidio",
         help="Disable Presidio PII detection (enabled by default).",
+    ),
+    show_version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        callback=_version_callback,
+        is_eager=True,
+        help="Show version and exit.",
     ),
 ) -> None:
     """Agent Inspector by Cylestio lets you debug, inspect, and evaluate agent behaviour and risk."""
