@@ -6,29 +6,19 @@ Analyze and debug AI agents in real-time. Scan your code for vulnerabilities (bo
 
 IDE integration provides MCP query tools for inspecting sessions, risk metrics, and security findings directly in your editor. It also enables static analysis to scan your agent code for vulnerabilities before runtime.
 
-### Claude Code
+#### Claude Code
 
-Register the Cylestio marketplace:
+Run these commands to register the marketplace and install the plugin:
 
 ```
 /plugin marketplace add cylestio/agent-inspector
-```
-
-Then install the plugin:
-
-```
 /plugin install agent-inspector@cylestio
-```
-
-Run the setup command
-
-```
 /agent-inspector:setup
 ```
 
 After installation, restart Claude Code for the MCP connection to activate.
 
-### Cursor
+#### Cursor
 
 Copy this command to Cursor and it will set everything up for you:
 
@@ -40,17 +30,17 @@ After setup, restart Cursor and approve the MCP server when prompted.
 
 ## Install without IDE Integration
 
-Install via `pipx` (recommended):
+Run directly with `uvx`:
+
+```bash
+uvx agent-inspector openai   # or: anthropic
+```
+
+Install via `pipx` or `pip`:
 
 ```bash
 pipx install agent-inspector
 agent-inspector openai   # or: anthropic
-```
-
-Or run directly with `uvx`:
-
-```bash
-uvx agent-inspector openai   # or: anthropic
 ```
 
 This starts:
