@@ -1,54 +1,46 @@
 # Agent Inspector
 
-Debug, trace, and evaluate agent risk and behavior in real-time.
+Analyze and debug AI agents in real-time. Scan your code for vulnerabilities (both statically and dynamically), trace LLM calls, and evaluate runtime behavior—all from a single command.
 
-Agent Inspector gives you instant visibility into your AI agents with ready-to-run profiles for OpenAI and Anthropic. Start a local proxy and live tracing dashboard with a single command.
-
-Ideal for development-time evaluation and for running alongside your test suite (including CI).
-
-## IDE Setup
+## Install through the IDE
 
 IDE integration provides MCP query tools for inspecting sessions, risk metrics, and security findings directly in your editor. It also enables static analysis to scan your agent code for vulnerabilities before runtime.
 
-### Claude Code
+#### Claude Code
 
-Register the Cylestio marketplace:
+Run these commands to register the marketplace and install the plugin:
 
 ```
 /plugin marketplace add cylestio/agent-inspector
-```
-
-Then install the plugin:
-
-```
 /plugin install agent-inspector@cylestio
+/agent-inspector:setup
 ```
 
 After installation, restart Claude Code for the MCP connection to activate.
 
-### Cursor
+#### Cursor
 
 Copy this command to Cursor and it will set everything up for you:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/cylestio/agent-inspector/refs/heads/main/integrations/AGENT_INSPECTOR_SETUP.md
+Fetch and follow instructions from https://raw.githubusercontent.com/cylestio/agent-inspector/main/integrations/AGENT_INSPECTOR_SETUP.md
 ```
 
 After setup, restart Cursor and approve the MCP server when prompted.
 
 ## Install without IDE Integration
 
-Install via `pipx` (recommended):
+Run directly with `uvx`:
+
+```bash
+uvx agent-inspector openai   # or: anthropic
+```
+
+Install via `pipx` or `pip`:
 
 ```bash
 pipx install agent-inspector
 agent-inspector openai   # or: anthropic
-```
-
-Or run directly with `uvx`:
-
-```bash
-uvx agent-inspector openai   # or: anthropic
 ```
 
 This starts:
@@ -80,6 +72,50 @@ client = Anthropic(base_url=f"http://localhost:4000/agent-workflow/{AGENT_WORKFL
 Replace `AGENT_WORKFLOW_ID` with your project identifier (e.g., derived from your git repo name, package name, or folder name).
 
 Open http://localhost:7100 to view the live dashboard.
+
+## Identifying and Grouping LLM Calls
+
+The proxy automatically detects and groups most identifiers. All headers below are **optional** and only needed when you want to override the automatic behavior. Add headers via your SDK's `extra_headers` or `default_headers` parameter.
+
+#### Workflow ID (required in URL)
+
+An agentic workflow composed of multiple LLM calls with different prompts should be identified using the workflow ID in the base URL:
+
+```
+http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}
+```
+
+This groups all calls from the same agent or application together, regardless of prompt type or conversation.
+
+#### Session Grouping (optional)
+
+When an agent executes a series of different LLM conversations as part of a single run or task, you can group them into one session:
+
+```
+x-cylestio-session-id: request-f1a1b2a8
+```
+
+This is useful for multi-step workflows where a classifier, retriever, and generator each make separate calls but belong to the same execution. No automatic detection - must be provided explicitly.
+
+#### Conversation Type (auto-detected)
+
+The proxy automatically identifies different conversation types based on the system prompt hash. Each unique system prompt creates a distinct conversation type in the dashboard.
+
+To assign a meaningful name instead of an auto-generated hash, optionally use:
+
+```
+x-cylestio-prompt-id: tool-decision-making
+```
+
+#### Conversation ID (auto-detected)
+
+Multi-turn conversations with message history are automatically inferred from the prompt content and conversation structure.
+
+To explicitly track a conversation across API calls, optionally generate your own identifier:
+
+```
+x-cylestio-conversation-id: conv-uuid-here
+```
 
 ## Features
 
