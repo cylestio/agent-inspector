@@ -81,6 +81,50 @@ Replace `AGENT_WORKFLOW_ID` with your project identifier (e.g., derived from you
 
 Open http://localhost:7100 to view the live dashboard.
 
+## Identifying and Grouping LLM Calls
+
+The proxy automatically detects and groups most identifiers. All headers below are **optional** and only needed when you want to override the automatic behavior. Add headers via your SDK's `extra_headers` or `default_headers` parameter.
+
+### Workflow ID (required in URL)
+
+An agentic workflow composed of multiple LLM calls with different prompts should be identified using the workflow ID in the base URL:
+
+```
+http://localhost:4000/agent-workflow/{AGENT_WORKFLOW_ID}
+```
+
+This groups all calls from the same agent or application together, regardless of prompt type or conversation.
+
+### Session Grouping (optional)
+
+When an agent executes a series of different LLM conversations as part of a single run or task, you can group them into one session:
+
+```
+x-cylestio-session-id: request-f1a1b2a8
+```
+
+This is useful for multi-step workflows where a classifier, retriever, and generator each make separate calls but belong to the same execution. No automatic detection - must be provided explicitly.
+
+### Conversation Type (auto-detected)
+
+The proxy automatically identifies different conversation types based on the system prompt hash. Each unique system prompt creates a distinct conversation type in the dashboard.
+
+To assign a meaningful name instead of an auto-generated hash, optionally use:
+
+```
+x-cylestio-prompt-id: tool-decision-making
+```
+
+### Conversation ID (auto-detected)
+
+Multi-turn conversations with message history are automatically inferred from the prompt content and conversation structure.
+
+To explicitly track a conversation across API calls, optionally generate your own identifier:
+
+```
+x-cylestio-conversation-id: conv-uuid-here
+```
+
 ## Features
 
 ### Security Scanning & Fixes
