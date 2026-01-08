@@ -117,6 +117,16 @@ To explicitly track a conversation across API calls, optionally generate your ow
 x-cylestio-conversation-id: conv-uuid-here
 ```
 
+#### Custom Tags (optional)
+
+Attach arbitrary metadata to any LLM call for filtering and analysis. Use comma-separated key:value pairs:
+
+```
+x-cylestio-tags: user:alice@example.com,env:production,team:backend
+```
+
+Tags appear in the dashboard and can be used to filter sessions by user, environment, feature flag, or any custom dimension.
+
 ## Features
 
 ### Security Scanning & Fixes
